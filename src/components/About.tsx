@@ -1,6 +1,25 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { motion, useTransform, useMotionValue, animate } from 'framer-motion';
 import { Sparkles, UserIcon } from '../icons';
-import { motion } from 'motion/react';
+
+const Counter = ({ value, duration = 2 }: { value: string, duration?: number }) => {
+  const numericValue = parseInt(value.replace(/[^0-9]/g, ''));
+  const suffix = value.replace(/[0-9]/g, '');
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (latest) => Math.round(latest));
+  const [displayValue, setDisplayValue] = useState("0");
+
+  useEffect(() => {
+    const controls = animate(count, numericValue, { duration });
+    return () => controls.stop();
+  }, [numericValue, duration, count]);
+
+  useEffect(() => {
+    return rounded.on("change", (latest) => setDisplayValue(latest.toString()));
+  }, [rounded]);
+
+  return <span>{displayValue}{suffix}</span>;
+};
 
 export const About: React.FC = () => {
   const stats = [
@@ -87,7 +106,9 @@ export const About: React.FC = () => {
                   transition={{ duration: 0.5, delay: 0.4 + (idx * 0.1) }}
                   className="text-center"
                 >
-                  <span className="block text-3xl font-serif italic font-bold text-primary">{stat.value}</span>
+                  <span className="block text-3xl font-serif italic font-bold text-primary">
+                    <Counter value={stat.value} />
+                  </span>
                   <span className="text-[10px] uppercase tracking-widest text-muted font-bold">{stat.label}</span>
                 </motion.div>
               ))}

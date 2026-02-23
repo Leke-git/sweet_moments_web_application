@@ -65,7 +65,7 @@ export const Kitchen: React.FC = () => {
             preload="auto"
             className="w-full h-full object-cover"
           >
-            <source src="https://player.vimeo.com/external/494252666.sd.mp4?s=72973a9285122f36eca4f0c33b17444f8777a621&profile_id=165&oauth2_token_id=57447761" type="video/mp4" />
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-baker-preparing-dough-for-bread-4444-large.mp4" type="video/mp4" />
           </video>
         </div>
       </div>

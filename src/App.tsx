@@ -165,14 +165,14 @@ export default function App() {
               <span className="text-2xl font-serif italic font-bold text-primary">Sweet Moments</span>
               <span className="text-[10px] uppercase tracking-widest text-muted font-bold">Artisan Custom Cakes</span>
             </div>
-            <p className="text-sm text-muted leading-relaxed">
+            <p className="text-sm text-dark/70 dark:text-muted leading-relaxed">
               Crafting bespoke edible art for your most cherished celebrations. Every cake tells a story.
             </p>
           </div>
           
           <div className="space-y-6">
             <h4 className="font-bold uppercase tracking-widest text-xs text-dark">Quick Links</h4>
-            <ul className="space-y-4 text-sm text-muted">
+            <ul className="space-y-4 text-sm text-dark/70 dark:text-muted">
               <li><a href="#home" className="hover:text-primary transition-colors">Home</a></li>
               <li><a href="#gallery" className="hover:text-primary transition-colors">Gallery</a></li>
               <li><a href="#kitchen" className="hover:text-primary transition-colors">The Kitchen</a></li>
@@ -182,7 +182,7 @@ export default function App() {
 
           <div className="space-y-6">
             <h4 className="font-bold uppercase tracking-widest text-xs text-dark">Support</h4>
-            <ul className="space-y-4 text-sm text-muted">
+            <ul className="space-y-4 text-sm text-dark/70 dark:text-muted">
               <li><a href="#contact" className="hover:text-primary transition-colors">Contact Us</a></li>
               <li><button onClick={() => setLegalModal({ title: 'Frequently Asked Questions', type: 'faqs' })} className="hover:text-primary transition-colors">FAQs</button></li>
               <li><button onClick={() => setLegalModal({ title: 'Terms of Service', type: 'terms' })} className="hover:text-primary transition-colors">Terms of Service</button></li>
@@ -192,19 +192,19 @@ export default function App() {
 
           <div className="space-y-6">
             <h4 className="font-bold uppercase tracking-widest text-xs text-dark">Newsletter</h4>
-            <p className="text-sm text-muted">Join our circle for seasonal flavours and inspiration.</p>
+            <p className="text-sm text-dark/70 dark:text-muted">Join our circle for seasonal flavours and inspiration.</p>
               <div className="flex space-x-2">
                 <input 
                   type="email" 
                   placeholder="Your email" 
-                  className="bg-white dark:bg-black/20 border border-border px-4 py-2 rounded-xl text-sm outline-none focus:border-primary w-full text-dark dark:text-white"
+                  className="bg-bg dark:bg-black/20 border border-border px-4 py-2 rounded-xl text-sm outline-none focus:border-primary w-full text-dark dark:text-white"
                 />
                 <button className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold">Join</button>
               </div>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 pt-8 border-t border-border text-center">
-          <p className="text-xs text-muted">© {new Date().getFullYear()} Sweet Moments Artisan Bakery. All rights reserved.</p>
+          <p className="text-xs text-dark/60 dark:text-muted">© {new Date().getFullYear()} Sweet Moments Artisan Bakery. All rights reserved.</p>
         </div>
       </footer>
 
