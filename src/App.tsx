@@ -158,7 +158,7 @@ export default function App() {
         <Contact />
       </main>
 
-      <footer className="bg-surface dark:bg-black/20 py-20 border-t border-border">
+      <footer className="bg-white dark:bg-black/20 py-20 border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="space-y-6">
             <div className="flex flex-col">
@@ -193,14 +193,14 @@ export default function App() {
           <div className="space-y-6">
             <h4 className="font-bold uppercase tracking-widest text-xs text-dark">Newsletter</h4>
             <p className="text-sm text-muted">Join our circle for seasonal flavours and inspiration.</p>
-            <div className="flex space-x-2">
-              <input 
-                type="email" 
-                placeholder="Your email" 
-                className="bg-bg dark:bg-black/20 border border-border px-4 py-2 rounded-xl text-sm outline-none focus:border-primary w-full"
-              />
-              <button className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold">Join</button>
-            </div>
+              <div className="flex space-x-2">
+                <input 
+                  type="email" 
+                  placeholder="Your email" 
+                  className="bg-white dark:bg-black/20 border border-border px-4 py-2 rounded-xl text-sm outline-none focus:border-primary w-full text-dark dark:text-white"
+                />
+                <button className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold">Join</button>
+              </div>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 pt-8 border-t border-border text-center">
