@@ -114,8 +114,18 @@ export const OrderWizard: React.FC<OrderWizardProps> = ({ config, onClose, userE
   };
 
   const handleSubmit = async () => {
+    // Basic Validation
+    if (!formData.customerName || !formData.customerEmail || !formData.deliveryMethod) {
+      alert("Please fill in all required contact and delivery details.");
+      setCurrentStep(7);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
+      // Get current user ID if logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const orderData = {
         customer_name: formData.customerName,
         customer_email: formData.customerEmail,
@@ -125,7 +135,8 @@ export const OrderWizard: React.FC<OrderWizardProps> = ({ config, onClose, userE
         delivery_address: formData.deliveryAddress,
         items: formData.items,
         total_price: totalPrice,
-        status: 'pending'
+        status: 'pending',
+        user_id: session?.user?.id || null
       };
 
       if (supabase) {
