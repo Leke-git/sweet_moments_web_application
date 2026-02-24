@@ -65,13 +65,17 @@ app.post("/api/auth/request-code", authLimiter, async (req, res) => {
 
     if (dbError) throw dbError;
 
-    // 3. Send the code to n8n
-    const n8nGatewayUrl = process.env.VITE_N8N_GATEWAY_URL;
+    // 3. Send the code to n8n via Secure Proxy
+    const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
+    const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
     
     if (n8nGatewayUrl) {
       await fetch(n8nGatewayUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-N8N-SECRET": n8nSecret || ""
+        },
         body: JSON.stringify({
           email,
           code,
@@ -81,7 +85,7 @@ app.post("/api/auth/request-code", authLimiter, async (req, res) => {
       });
     }
 
-    res.json({ success: true, message: "Verification code sent to n8n" });
+    res.json({ success: true, message: "Verification code sent" });
   } catch (error: any) {
     console.error("Auth code generation error:", error);
     res.status(500).json({ error: "Failed to generate code" });
@@ -133,11 +137,15 @@ app.post("/api/auth/verify-code", authLimiter, async (req, res) => {
     await supabaseAdmin.from("auth_codes").delete().eq("email", email);
 
     // 4. Trigger Welcome Message via n8n
-    const n8nGatewayUrl = process.env.VITE_N8N_GATEWAY_URL;
+    const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
+    const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
     if (n8nGatewayUrl) {
       fetch(n8nGatewayUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-N8N-SECRET": n8nSecret || ""
+        },
         body: JSON.stringify({ email, type: "welcome_message" })
       }).catch(err => console.error("Welcome webhook failed:", err));
     }
@@ -155,7 +163,7 @@ app.post("/api/auth/verify-code", authLimiter, async (req, res) => {
 
 // Secure Proxy: New Enquiry
 app.post("/api/enquiry", apiLimiter, async (req, res) => {
-  const n8nGatewayUrl = process.env.VITE_N8N_GATEWAY_URL;
+  const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
   const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
 
   if (n8nGatewayUrl) {
@@ -177,7 +185,7 @@ app.post("/api/enquiry", apiLimiter, async (req, res) => {
 
 // Secure Proxy: New Order
 app.post("/api/order", apiLimiter, async (req, res) => {
-  const n8nGatewayUrl = process.env.VITE_N8N_GATEWAY_URL;
+  const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
   const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
 
   if (n8nGatewayUrl) {
