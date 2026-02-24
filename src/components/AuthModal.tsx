@@ -15,20 +15,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      if (!supabase) {
-        throw new Error("Supabase is not configured. Please check your environment variables.");
-      }
-      const response = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
+      const response = await fetch('/api/auth/request-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email, 
+          origin: window.location.origin 
+        }),
       });
-      if (response.error) throw response.error;
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to request login link");
+      }
+      
       setSent(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Auth error:", error);
-      alert("Failed to send magic link. Please try again.");
+      alert(error.message || "Failed to send magic link. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
