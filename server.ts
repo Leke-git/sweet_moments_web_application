@@ -49,7 +49,7 @@ const supabaseAdmin = createClient(
 app.post("/api/auth/request-code", authLimiter, async (req, res) => {
   const { email } = req.body;
 
-  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: "Valid email is required" });
   }
 
