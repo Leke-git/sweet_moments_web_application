@@ -24,15 +24,12 @@ export const Contact: React.FC = () => {
         await supabase.from('enquiries').insert([data]);
       }
 
-      // Trigger n8n Webhook if configured
-      const n8nGateway = import.meta.env.VITE_N8N_GATEWAY_URL;
-      if (n8nGateway) {
-        await fetch(n8nGateway, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...data, type: 'new_enquiry' })
-        }).catch(err => console.error("n8n Enquiry Webhook failed:", err));
-      }
+      // Trigger n8n via Secure Server Proxy
+      await fetch('/api/enquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).catch(err => console.error("Enquiry notification failed:", err));
 
       setSubmitted(true);
     } catch (error) {

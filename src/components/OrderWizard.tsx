@@ -133,15 +133,12 @@ export const OrderWizard: React.FC<OrderWizardProps> = ({ config, onClose, userE
         if (error) throw error;
       }
 
-      // Trigger n8n Webhook if configured
-      const n8nGateway = import.meta.env.VITE_N8N_GATEWAY_URL;
-      if (n8nGateway) {
-        await fetch(n8nGateway, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...orderData, type: 'new_order' })
-        }).catch(err => console.error("n8n Order Webhook failed:", err));
-      }
+      // Trigger n8n via Secure Server Proxy
+      await fetch('/api/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      }).catch(err => console.error("Order notification failed:", err));
 
       setOrderComplete(true);
     } catch (error) {

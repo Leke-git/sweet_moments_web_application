@@ -113,7 +113,15 @@ app.post("/api/auth/verify-code", authLimiter, async (req, res) => {
       return res.status(401).json({ error: "Code has expired" });
     }
 
-    // 2. Code is valid, generate a session link for the user
+    // 2. Ensure user exists and is confirmed to prevent Supabase from sending its own emails
+    // We try to create the user; if they exist, Supabase will return an error which we can safely ignore
+    await supabaseAdmin.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: { full_name: email.split('@')[0] }
+    });
+
+    // 3. Generate a session link for the user
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
       email,
@@ -121,7 +129,7 @@ app.post("/api/auth/verify-code", authLimiter, async (req, res) => {
 
     if (linkError) throw linkError;
 
-    // 3. Clean up the code immediately to prevent reuse
+    // 4. Clean up the code immediately to prevent reuse
     await supabaseAdmin.from("auth_codes").delete().eq("email", email);
 
     // 4. Trigger Welcome Message via n8n
@@ -143,6 +151,50 @@ app.post("/api/auth/verify-code", authLimiter, async (req, res) => {
     console.error("Auth verification error:", error);
     res.status(500).json({ error: "Verification failed" });
   }
+});
+
+// Secure Proxy: New Enquiry
+app.post("/api/enquiry", apiLimiter, async (req, res) => {
+  const n8nGatewayUrl = process.env.VITE_N8N_GATEWAY_URL;
+  const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
+
+  if (n8nGatewayUrl) {
+    try {
+      await fetch(n8nGatewayUrl, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "X-N8N-SECRET": n8nSecret || "" 
+        },
+        body: JSON.stringify({ ...req.body, type: "new_enquiry" })
+      });
+    } catch (err) {
+      console.error("n8n Enquiry Proxy failed:", err);
+    }
+  }
+  res.json({ success: true });
+});
+
+// Secure Proxy: New Order
+app.post("/api/order", apiLimiter, async (req, res) => {
+  const n8nGatewayUrl = process.env.VITE_N8N_GATEWAY_URL;
+  const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
+
+  if (n8nGatewayUrl) {
+    try {
+      await fetch(n8nGatewayUrl, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "X-N8N-SECRET": n8nSecret || "" 
+        },
+        body: JSON.stringify({ ...req.body, type: "new_order" })
+      });
+    } catch (err) {
+      console.error("n8n Order Proxy failed:", err);
+    }
+  }
+  res.json({ success: true });
 });
 
 // Vite middleware for development
