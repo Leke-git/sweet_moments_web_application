@@ -26,35 +26,23 @@ export const ChatWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const webhookUrl = import.meta.env.VITE_N8N_CHAT_WEBHOOK_URL;
-      
-      if (!webhookUrl) {
-        // Fallback to Gemini if webhook not configured
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.0-flash',
-          contents: userMsg,
-          config: {
-            systemInstruction: "You are a helpful AI assistant for Sweet Moments, a luxury artisan bakery. Sarah is the lead baker. You help customers with cake enquiries, flavour suggestions, and general bakery info. Keep responses elegant, warm, and concise."
-          }
-        });
-        setMessages(prev => [...prev, { role: 'model', text: response.text || "I'm sorry, I couldn't process that. How else can I help?" }]);
-        return;
-      }
-
-      const response = await fetch(webhookUrl, {
+      const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsg, sessionId: 'user-session' })
+        body: JSON.stringify({ 
+          message: userMsg, 
+          history: messages,
+          userEmail: 'Guest' // In a real app, pass the logged-in user email
+        })
       });
 
-      if (!response.ok) throw new Error('Webhook failed');
+      if (!response.ok) throw new Error('AI request failed');
       
       const data = await response.json();
-      setMessages(prev => [...prev, { role: 'model', text: data.output || data.message || "I'm sorry, I couldn't process that. How else can I help?" }]);
+      setMessages(prev => [...prev, { role: 'model', text: data.text }]);
     } catch (error) {
       console.error("Chat AI error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: "I'm having a bit of trouble connecting. Please try again in a moment!" }]);
+      setMessages(prev => [...prev, { role: 'model', text: "I'm having a bit of trouble connecting to my brain. Please try again in a moment!" }]);
     } finally {
       setIsLoading(false);
     }

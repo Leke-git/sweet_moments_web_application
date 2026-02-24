@@ -1,7 +1,8 @@
 import React from 'react';
 import { 
   X, ShoppingCart, Inbox, TrendingUp, Check, Trash2, 
-  Eye, RefreshCw, Loader2, ChevronDown, ExternalLink 
+  Eye, RefreshCw, Loader2, ChevronDown, ExternalLink,
+  Settings, MessageSquare, Shield, Save, ShoppingBag
 } from '../icons';
 import { supabase } from '../lib/supabase';
 import { Order, EnquiryData, User } from '../types';
@@ -15,16 +16,34 @@ import {
 interface AdminDashboardProps {
   onClose: () => void;
   user: User | null;
+  initialConfig: any;
+  onConfigUpdate: (config: any) => void;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user }) => {
-  const [activeTab, setActiveTab] = React.useState<'orders' | 'enquiries' | 'analytics'>('orders');
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user, initialConfig, onConfigUpdate }) => {
+  const [activeTab, setActiveTab] = React.useState<'orders' | 'enquiries' | 'analytics' | 'config' | 'support'>('orders');
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [enquiries, setEnquiries] = React.useState<EnquiryData[]>([]);
+  const [config, setConfig] = React.useState(initialConfig);
   const [loading, setLoading] = React.useState(true);
   const [analyticsRange, setAnalyticsRange] = React.useState(30);
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email);
+
+  const handleUpdateConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (supabase) {
+        const { error } = await supabase.from('site_config').update({ config }).eq('id', 1);
+        if (error) throw error;
+        onConfigUpdate(config);
+        alert("Site configuration updated successfully!");
+      }
+    } catch (error) {
+      console.error("Config update error:", error);
+      alert("Failed to update configuration.");
+    }
+  };
 
   const fetchData = React.useCallback(async () => {
     if (!isAdmin) {
@@ -159,7 +178,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user })
             {[
               { id: 'orders', icon: <ShoppingCart size={16} />, label: 'Orders' },
               { id: 'enquiries', icon: <Inbox size={16} />, label: 'Enquiries' },
-              { id: 'analytics', icon: <TrendingUp size={16} />, label: 'Analytics' }
+              { id: 'analytics', icon: <TrendingUp size={16} />, label: 'Analytics' },
+              { id: 'support', icon: <MessageSquare size={16} />, label: 'Support' },
+              { id: 'config', icon: <Settings size={16} />, label: 'Site Editor' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -410,6 +431,83 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user })
                       </ResponsiveContainer>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+            {activeTab === 'config' && (
+              <div className="max-w-4xl space-y-12 animate-fade-in">
+                <div className="space-y-4">
+                  <h3 className="text-3xl font-serif italic font-bold text-dark">Visual Site Editor</h3>
+                  <p className="text-muted">Update your bakery's public information, branding, and status instantly.</p>
+                </div>
+
+                <form onSubmit={handleUpdateConfig} className="space-y-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="space-y-4">
+                      <label className="text-xs font-bold uppercase tracking-widest text-muted ml-2">Bakery Name</label>
+                      <input
+                        type="text"
+                        value={config.bakeryName}
+                        onChange={(e) => setConfig({ ...config, bakeryName: e.target.value })}
+                        className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-black/20 border border-border outline-none focus:border-primary transition-all shadow-sm"
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-xs font-bold uppercase tracking-widest text-muted ml-2">Contact Email</label>
+                      <input
+                        type="email"
+                        value={config.contactEmail}
+                        onChange={(e) => setConfig({ ...config, contactEmail: e.target.value })}
+                        className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-black/20 border border-border outline-none focus:border-primary transition-all shadow-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-xs font-bold uppercase tracking-widest text-muted ml-2">Announcement Banner</label>
+                    <textarea
+                      value={config.announcement}
+                      onChange={(e) => setConfig({ ...config, announcement: e.target.value })}
+                      rows={3}
+                      className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-black/20 border border-border outline-none focus:border-primary transition-all shadow-sm"
+                    />
+                  </div>
+
+                  <div className="bg-primary/5 rounded-[2rem] p-8 border border-primary/20 flex items-center justify-between">
+                    <div className="space-y-1">
+                      <h4 className="text-lg font-bold text-dark">Maintenance Mode</h4>
+                      <p className="text-sm text-muted">When enabled, customers will see a maintenance message and ordering will be disabled.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setConfig({ ...config, isMaintenance: !config.isMaintenance })}
+                      className={`w-16 h-9 rounded-full transition-all relative ${config.isMaintenance ? 'bg-primary' : 'bg-muted'}`}
+                    >
+                      <div className={`absolute top-1 w-7 h-7 bg-white rounded-full transition-all shadow-md ${config.isMaintenance ? 'left-8' : 'left-1'}`} />
+                    </button>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      className="bg-primary text-white px-12 py-5 rounded-2xl font-bold shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all flex items-center space-x-3"
+                    >
+                      <Save size={20} />
+                      <span>Save Site Changes</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {activeTab === 'support' && (
+              <div className="flex flex-col items-center justify-center py-24 text-center space-y-6 opacity-50">
+                <div className="w-24 h-24 bg-muted/20 rounded-full flex items-center justify-center">
+                  <MessageSquare size={40} />
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-xl font-bold text-dark">Support Tickets</h4>
+                  <p className="text-muted max-w-xs">Escalated AI chats will appear here for your personal attention.</p>
                 </div>
               </div>
             )}

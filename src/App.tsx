@@ -229,6 +229,8 @@ export default function App() {
         <AdminDashboard 
           user={user} 
           onClose={() => setShowAdminPanel(false)} 
+          initialConfig={config}
+          onConfigUpdate={setConfig}
         />
       )}
 

@@ -175,10 +175,75 @@ app.post("/api/auth/verify-code", authLimiter, async (req, res) => {
   }
 });
 
+// AI Support Agent Endpoint
+app.post("/api/ai/chat", apiLimiter, async (req, res) => {
+  const { message, history, userEmail } = req.body;
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    return res.status(500).json({ error: "AI service not configured" });
+  }
+
+  try {
+    const { GoogleGenAI } = await import("@google/genai");
+    const ai = new GoogleGenAI({ apiKey });
+    
+    // Get current site config for context
+    const { data: configData } = await supabaseAdmin.from('site_config').select('config').eq('id', 1).single();
+    const bakeryInfo = configData?.config || {};
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [
+        { role: "user", parts: [{ text: `You are the AI assistant for ${bakeryInfo.bakeryName || 'Sweet Moments'}. 
+          Bakery Info: ${JSON.stringify(bakeryInfo)}. 
+          User Email: ${userEmail || 'Guest'}.
+          Instructions: Be helpful, sweet, and professional. 
+          If the user is angry, asks for a human, or asks a complex question you can't answer, 
+          respond with: "[ESCALATE] I'll get a human to help you with that right away!"
+          Current Conversation: ${JSON.stringify(history)}
+          User Message: ${message}` }] }
+      ]
+    });
+
+    const text = response.text || "I'm sorry, I couldn't process that.";
+
+    // Handle Escalation
+    if (text.includes("[ESCALATE]")) {
+      const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
+      const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
+      
+      if (n8nGatewayUrl) {
+        fetch(n8nGatewayUrl, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "X-N8N-SECRET": n8nSecret || ""
+          },
+          body: JSON.stringify({
+            type: "support_escalation",
+            email: userEmail || "Guest",
+            message: message,
+            timestamp: new Date().toISOString()
+          })
+        }).catch(e => console.error("Escalation trigger failed:", e));
+      }
+    }
+
+    res.json({ text: text.replace("[ESCALATE]", "") });
+  } catch (error) {
+    console.error("AI Chat Error:", error);
+    res.status(500).json({ error: "AI is currently resting. Please try again later." });
+  }
+});
+
 // Secure Proxy: New Enquiry
 app.post("/api/enquiry", apiLimiter, async (req, res) => {
   const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
   const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
+
+  // Always return success to the user (Fallback mechanism)
+  res.json({ success: true });
 
   if (n8nGatewayUrl) {
     try {
@@ -191,16 +256,19 @@ app.post("/api/enquiry", apiLimiter, async (req, res) => {
         body: JSON.stringify({ ...req.body, type: "new_enquiry" })
       });
     } catch (err) {
-      console.error("n8n Enquiry Proxy failed:", err);
+      console.error("n8n Enquiry Proxy failed (background):", err);
+      // In a real app, you'd queue this for retry
     }
   }
-  res.json({ success: true });
 });
 
 // Secure Proxy: New Order
 app.post("/api/order", apiLimiter, async (req, res) => {
   const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
   const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
+
+  // Always return success to the user (Fallback mechanism)
+  res.json({ success: true });
 
   if (n8nGatewayUrl) {
     try {
@@ -213,10 +281,9 @@ app.post("/api/order", apiLimiter, async (req, res) => {
         body: JSON.stringify({ ...req.body, type: "new_order" })
       });
     } catch (err) {
-      console.error("n8n Order Proxy failed:", err);
+      console.error("n8n Order Proxy failed (background):", err);
     }
   }
-  res.json({ success: true });
 });
 
 // Vite middleware for development

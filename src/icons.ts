@@ -5,5 +5,5 @@ export {
   ChevronLeft, Globe, Star, LogOut, TrendingUp, Inbox, Users, Info,
   Trash2, ExternalLink, RefreshCw, Eye, Sun, Moon, Plus, Minus,
   Calendar, Map, User as UserIcon, LayoutDashboard, Search,
-  MessageCircle, Send
+  MessageCircle, Send, Settings, MessageSquare, Shield, Save, ShoppingBag
 } from 'lucide-react';
