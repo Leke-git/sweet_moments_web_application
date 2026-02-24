@@ -22,55 +22,104 @@ const supabaseAdmin = createClient(
   }
 );
 
-// Custom Auth Endpoint
-app.post("/api/auth/request-link", async (req, res) => {
-  const { email, origin } = req.body;
+// Custom Auth Endpoint: Request 4-Digit Code
+app.post("/api/auth/request-code", async (req, res) => {
+  const { email } = req.body;
 
   if (!email) {
     return res.status(400).json({ error: "Email is required" });
   }
 
   try {
-    // 1. Generate the magic link using Supabase Admin
-    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-      options: {
-        redirectTo: origin || "http://localhost:3000"
-      }
-    });
+    // 1. Generate a 4-digit code
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 mins
 
-    if (error) throw error;
+    // 2. Store in Supabase
+    const { error: dbError } = await supabaseAdmin
+      .from("auth_codes")
+      .upsert({ email, code, expires_at: expiresAt });
 
-    const magicLink = data.properties.action_link;
+    if (dbError) throw dbError;
 
-    // 2. Send the link to n8n
-    const n8nWebhookUrl = process.env.VITE_N8N_AUTH_WEBHOOK_URL;
+    // 3. Send the code to n8n
+    const n8nGatewayUrl = process.env.VITE_N8N_GATEWAY_URL;
     
-    if (n8nWebhookUrl) {
-      const n8nResponse = await fetch(n8nWebhookUrl, {
+    if (n8nGatewayUrl) {
+      await fetch(n8nGatewayUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
-          magicLink,
-          type: "auth_request",
+          code,
+          type: "auth_code_request",
           timestamp: new Date().toISOString()
         })
       });
-
-      if (!n8nResponse.ok) {
-        console.error("n8n webhook failed:", await n8nResponse.text());
-      }
-    } else {
-      console.warn("VITE_N8N_AUTH_WEBHOOK_URL not configured. Link generated but not sent.");
-      // In a real scenario, you'd want to handle this better
     }
 
-    res.json({ success: true, message: "Auth link generated and sent to n8n" });
+    res.json({ success: true, message: "Verification code sent to n8n" });
   } catch (error: any) {
-    console.error("Auth link generation error:", error);
-    res.status(500).json({ error: error.message || "Failed to generate auth link" });
+    console.error("Auth code generation error:", error);
+    res.status(500).json({ error: error.message || "Failed to generate code" });
+  }
+});
+
+// Custom Auth Endpoint: Verify 4-Digit Code
+app.post("/api/auth/verify-code", async (req, res) => {
+  const { email, code } = req.body;
+
+  if (!email || !code) {
+    return res.status(400).json({ error: "Email and code are required" });
+  }
+
+  try {
+    // 1. Check the code in Supabase
+    const { data, error: dbError } = await supabaseAdmin
+      .from("auth_codes")
+      .select("*")
+      .eq("email", email)
+      .eq("code", code)
+      .single();
+
+    if (dbError || !data) {
+      return res.status(401).json({ error: "Invalid or expired code" });
+    }
+
+    if (new Date(data.expires_at) < new Date()) {
+      return res.status(401).json({ error: "Code has expired" });
+    }
+
+    // 2. Code is valid, generate a session link for the user
+    // We use magiclink type to get a valid Supabase token
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
+
+    if (linkError) throw linkError;
+
+    // 3. Clean up the code
+    await supabaseAdmin.from("auth_codes").delete().eq("email", email);
+
+    // 4. Trigger Welcome Message via n8n
+    const n8nGatewayUrl = process.env.VITE_N8N_GATEWAY_URL;
+    if (n8nGatewayUrl) {
+      fetch(n8nGatewayUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, type: "welcome_message" })
+      }).catch(err => console.error("Welcome webhook failed:", err));
+    }
+
+    // Return the magic link properties so the frontend can sign in
+    res.json({ 
+      success: true, 
+      hash: new URL(linkData.properties.action_link).hash 
+    });
+  } catch (error: any) {
+    console.error("Auth verification error:", error);
+    res.status(500).json({ error: error.message || "Verification failed" });
   }
 });
 

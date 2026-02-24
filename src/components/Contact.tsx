@@ -25,9 +25,9 @@ export const Contact: React.FC = () => {
       }
 
       // Trigger n8n Webhook if configured
-      const n8nWebhook = import.meta.env.VITE_N8N_ENQUIRY_WEBHOOK_URL;
-      if (n8nWebhook) {
-        await fetch(n8nWebhook, {
+      const n8nGateway = import.meta.env.VITE_N8N_GATEWAY_URL;
+      if (n8nGateway) {
+        await fetch(n8nGateway, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...data, type: 'new_enquiry' })
