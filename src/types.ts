@@ -20,6 +20,24 @@ export interface Surcharges {
   fondant_premium: number;
 }
 
+export interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  category: 'ordering' | 'delivery' | 'dietary' | 'general';
+  order_index: number;
+}
+
+export interface BusinessConfig {
+  bakeryName: string;
+  contactEmail: string;
+  announcement: string;
+  isMaintenance: boolean;
+  openingHours?: string;
+  deliveryZones?: string;
+  knowledgeBase?: string;
+}
+
 export interface SiteConfig {
   cake_types: CakeType[];
   sizes: Size[];

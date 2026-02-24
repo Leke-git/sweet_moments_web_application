@@ -2,10 +2,11 @@ import React from 'react';
 import { 
   X, ShoppingCart, Inbox, TrendingUp, Check, Trash2, 
   Eye, RefreshCw, Loader2, ChevronDown, ExternalLink,
-  Settings, MessageSquare, Shield, Save, ShoppingBag
+  Settings, MessageSquare, Shield, Save, ShoppingBag,
+  MessageCircle, Plus
 } from '../icons';
 import { supabase } from '../lib/supabase';
-import { Order, EnquiryData, User } from '../types';
+import { Order, EnquiryData, User, BusinessConfig, FAQ } from '../types';
 import { ADMIN_EMAILS } from '../constants';
 import { format, subDays, startOfDay, endOfDay, isWithinInterval, parseISO } from 'date-fns';
 import { 
@@ -16,17 +17,20 @@ import {
 interface AdminDashboardProps {
   onClose: () => void;
   user: User | null;
-  initialConfig: any;
-  onConfigUpdate: (config: any) => void;
+  initialConfig: BusinessConfig;
+  onConfigUpdate: (config: BusinessConfig) => void;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user, initialConfig, onConfigUpdate }) => {
-  const [activeTab, setActiveTab] = React.useState<'orders' | 'enquiries' | 'analytics' | 'config' | 'support'>('orders');
+  const [activeTab, setActiveTab] = React.useState<'orders' | 'enquiries' | 'analytics' | 'config' | 'faqs' | 'support'>('orders');
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [enquiries, setEnquiries] = React.useState<EnquiryData[]>([]);
-  const [config, setConfig] = React.useState(initialConfig);
+  const [faqs, setFaqs] = React.useState<FAQ[]>([]);
+  const [config, setConfig] = React.useState<BusinessConfig>(initialConfig);
   const [loading, setLoading] = React.useState(true);
   const [analyticsRange, setAnalyticsRange] = React.useState(30);
+
+  const [editingFaq, setEditingFaq] = React.useState<Partial<FAQ> | null>(null);
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email);
 
@@ -107,6 +111,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user, i
     }
   };
 
+  const handleSaveFaq = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingFaq?.question || !editingFaq?.answer) return;
+
+    try {
+      if (supabase) {
+        if (editingFaq.id) {
+          await supabase.from('faqs').update(editingFaq).eq('id', editingFaq.id);
+        } else {
+          await supabase.from('faqs').insert([{ ...editingFaq, order_index: faqs.length }]);
+        }
+        
+        const { data } = await supabase.from('faqs').select('*').order('order_index');
+        if (data) setFaqs(data);
+        setEditingFaq(null);
+      }
+    } catch (error) {
+      console.error('Error saving FAQ:', error);
+    }
+  };
+
+  const handleDeleteFaq = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this FAQ?')) return;
+    try {
+      if (supabase) {
+        await supabase.from('faqs').delete().eq('id', id);
+        setFaqs(faqs.filter(f => f.id !== id));
+      }
+    } catch (error) {
+      console.error('Error deleting FAQ:', error);
+    }
+  };
+
   // Analytics Data Preparation
   const filteredOrders = orders.filter(o => {
     const date = parseISO(o.created_at);
@@ -179,6 +216,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user, i
               { id: 'orders', icon: <ShoppingCart size={16} />, label: 'Orders' },
               { id: 'enquiries', icon: <Inbox size={16} />, label: 'Enquiries' },
               { id: 'analytics', icon: <TrendingUp size={16} />, label: 'Analytics' },
+              { id: 'faqs', icon: <MessageCircle size={16} />, label: 'FAQs' },
               { id: 'support', icon: <MessageSquare size={16} />, label: 'Support' },
               { id: 'config', icon: <Settings size={16} />, label: 'Site Editor' }
             ].map(tab => (
@@ -463,13 +501,50 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user, i
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="space-y-4">
+                      <label className="text-xs font-bold uppercase tracking-widest text-muted ml-2">Opening Hours</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Mon-Fri: 9am-5pm"
+                        value={config.openingHours || ''}
+                        onChange={(e) => setConfig({ ...config, openingHours: e.target.value })}
+                        className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-black/20 border border-border outline-none focus:border-primary transition-all shadow-sm"
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-xs font-bold uppercase tracking-widest text-muted ml-2">Delivery Zones</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Central London, SE Postcodes"
+                        value={config.deliveryZones || ''}
+                        onChange={(e) => setConfig({ ...config, deliveryZones: e.target.value })}
+                        className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-black/20 border border-border outline-none focus:border-primary transition-all shadow-sm"
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-4">
                     <label className="text-xs font-bold uppercase tracking-widest text-muted ml-2">Announcement Banner</label>
                     <textarea
                       value={config.announcement}
                       onChange={(e) => setConfig({ ...config, announcement: e.target.value })}
-                      rows={3}
+                      rows={2}
                       className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-black/20 border border-border outline-none focus:border-primary transition-all shadow-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between ml-2">
+                      <label className="text-xs font-bold uppercase tracking-widest text-muted">AI Knowledge Base</label>
+                      <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-1 rounded">PRO TIP: Add flavors, pricing, and allergen info here</span>
+                    </div>
+                    <textarea
+                      value={config.knowledgeBase || ''}
+                      onChange={(e) => setConfig({ ...config, knowledgeBase: e.target.value })}
+                      rows={6}
+                      placeholder="Describe your cakes, flavors, pricing tiers, and any other info the AI should know..."
+                      className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-black/20 border border-border outline-none focus:border-primary transition-all shadow-sm font-mono text-sm"
                     />
                   </div>
 
@@ -497,6 +572,106 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user, i
                     </button>
                   </div>
                 </form>
+              </div>
+            )}
+
+            {activeTab === 'faqs' && (
+              <div className="space-y-8 animate-fade-in">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-3xl font-serif italic font-semibold text-dark">FAQ Manager</h3>
+                  <button 
+                    onClick={() => setEditingFaq({ category: 'general' })}
+                    className="bg-primary text-white px-6 py-3 rounded-xl font-bold flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    <Plus size={20} />
+                    <span>Add FAQ</span>
+                  </button>
+                </div>
+
+                {editingFaq && (
+                  <div className="bg-white dark:bg-surface p-8 rounded-[2rem] border border-primary/20 shadow-2xl">
+                    <form onSubmit={handleSaveFaq} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold uppercase tracking-widest text-muted">Question</label>
+                          <input 
+                            type="text"
+                            value={editingFaq.question || ''}
+                            onChange={e => setEditingFaq({...editingFaq, question: e.target.value})}
+                            className="w-full px-6 py-4 rounded-xl bg-bg border border-border outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold uppercase tracking-widest text-muted">Category</label>
+                          <select 
+                            value={editingFaq.category || 'general'}
+                            onChange={e => setEditingFaq({...editingFaq, category: e.target.value as any})}
+                            className="w-full px-6 py-4 rounded-xl bg-bg border border-border outline-none focus:border-primary"
+                          >
+                            <option value="general">General</option>
+                            <option value="ordering">Ordering</option>
+                            <option value="delivery">Delivery</option>
+                            <option value="dietary">Dietary</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-widest text-muted">Answer</label>
+                        <textarea 
+                          value={editingFaq.answer || ''}
+                          onChange={e => setEditingFaq({...editingFaq, answer: e.target.value})}
+                          rows={4}
+                          className="w-full px-6 py-4 rounded-xl bg-bg border border-border outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-4">
+                        <button 
+                          type="button" 
+                          onClick={() => setEditingFaq(null)}
+                          className="px-6 py-3 rounded-xl font-bold text-muted hover:text-dark"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          type="submit"
+                          className="bg-primary text-white px-8 py-3 rounded-xl font-bold shadow-lg"
+                        >
+                          Save FAQ
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-4">
+                  {faqs.map(faq => (
+                    <div key={faq.id} className="bg-white dark:bg-surface p-6 rounded-2xl border border-border flex justify-between items-center group hover:border-primary/30 transition-all">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded">
+                            {faq.category}
+                          </span>
+                          <h4 className="font-bold text-dark">{faq.question}</h4>
+                        </div>
+                        <p className="text-sm text-muted line-clamp-1">{faq.answer}</p>
+                      </div>
+                      <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-all">
+                        <button 
+                          onClick={() => setEditingFaq(faq)}
+                          className="p-2 rounded-lg hover:bg-bg text-muted hover:text-primary"
+                        >
+                          <Settings size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteFaq(faq.id)}
+                          className="p-2 rounded-lg hover:bg-bg text-muted hover:text-red-500"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

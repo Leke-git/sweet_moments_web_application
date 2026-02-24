@@ -188,19 +188,45 @@ app.post("/api/ai/chat", apiLimiter, async (req, res) => {
     const { GoogleGenAI } = await import("@google/genai");
     const ai = new GoogleGenAI({ apiKey });
     
-    // Get current site config for context
+    // 1. SCRAPE LIVE CONTENT: Get current site config (Business + Cake Config)
     const { data: configData } = await supabaseAdmin.from('site_config').select('config').eq('id', 1).single();
-    const bakeryInfo = configData?.config || {};
+    const bizConfig = configData?.config || {};
+    
+    // 2. SCRAPE FAQS: Get structured FAQs
+    const { data: faqs } = await supabaseAdmin.from('faqs').select('*').order('order_index');
+    
+    // 3. NAVIGATION MAP: Define site structure
+    const siteMap = [
+      { name: 'Home', id: '#home', desc: 'Main landing page' },
+      { name: 'Gallery', id: '#gallery', desc: 'Browse our cake collections' },
+      { name: 'Order Now', id: 'action:order', desc: 'Open the cake customizer wizard' },
+      { name: 'Contact', id: '#contact', desc: 'Send us a message' }
+    ];
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: [
-        { role: "user", parts: [{ text: `You are the AI assistant for ${bakeryInfo.bakeryName || 'Sweet Moments'}. 
-          Bakery Info: ${JSON.stringify(bakeryInfo)}. 
-          User Email: ${userEmail || 'Guest'}.
-          Instructions: Be helpful, sweet, and professional. 
-          If the user is angry, asks for a human, or asks a complex question you can't answer, 
-          respond with: "[ESCALATE] I'll get a human to help you with that right away!"
+        { role: "user", parts: [{ text: `You are the expert AI assistant for ${bizConfig.bakeryName || 'Sweet Moments'}. 
+          
+          --- LIVE SITE DATA (SCRAPED) ---
+          BUSINESS INFO:
+          - Hours: ${bizConfig.openingHours}
+          - Zones: ${bizConfig.deliveryZones}
+          - Custom Knowledge: ${bizConfig.knowledgeBase}
+          
+          FREQUENTLY ASKED QUESTIONS:
+          ${JSON.stringify(faqs)}
+
+          SITE NAVIGATION (Help users find things):
+          ${JSON.stringify(siteMap)}
+
+          --- INSTRUCTIONS ---
+          1. Be sweet, professional, and concise.
+          2. Use the LIVE DATA and FAQs to answer questions accurately.
+          3. If a user wants to order, tell them to click the "Order Now" button or use the link action:order.
+          4. If a user asks for something you can't find in the data, offer to escalate to a human.
+          5. If you escalate, respond with: "[ESCALATE] I'll get a human to help you with that right away!"
+          
           Current Conversation: ${JSON.stringify(history)}
           User Message: ${message}` }] }
       ]

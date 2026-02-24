@@ -12,8 +12,9 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { ChatWidget } from './components/ChatWidget';
 import { LegalModal } from './components/LegalModal';
 import { CollectionModal } from './components/CollectionModal';
-import { SiteConfig, User } from './types';
-import { DEFAULT_CONFIG, ADMIN_EMAILS, GALLERY_CATEGORIES } from './constants';
+import { FAQSection } from './components/FAQSection';
+import { SiteConfig, BusinessConfig, User, FAQ } from './types';
+import { DEFAULT_CONFIG, ADMIN_EMAILS, GALLERY_CATEGORIES, DEFAULT_BUSINESS_CONFIG } from './constants';
 import { supabase } from './lib/supabase';
 import { Loader2 } from './icons';
 
@@ -24,7 +25,9 @@ export default function App() {
   });
   
   const [user, setUser] = React.useState<User | null>(null);
-  const [config, setConfig] = React.useState<SiteConfig>(DEFAULT_CONFIG);
+  const [cakeConfig, setCakeConfig] = React.useState<SiteConfig>(DEFAULT_CONFIG);
+  const [businessConfig, setBusinessConfig] = React.useState<BusinessConfig>(DEFAULT_BUSINESS_CONFIG);
+  const [faqs, setFaqs] = React.useState<FAQ[]>([]);
   const [loading, setLoading] = React.useState(true);
   
   const [showOrderModal, setShowOrderModal] = React.useState(false);
@@ -80,10 +83,16 @@ export default function App() {
             }
           });
 
-          // Load Config
+          // Load Business Config
           const configResponse = await supabase.from('site_config').select('config').eq('id', 1).single();
           if (configResponse.data?.config) {
-            setConfig(configResponse.data.config);
+            setBusinessConfig(configResponse.data.config);
+          }
+
+          // Load FAQs
+          const faqsResponse = await supabase.from('faqs').select('*').order('order_index');
+          if (faqsResponse.data) {
+            setFaqs(faqsResponse.data);
           }
         }
       } catch (error) {
@@ -151,12 +160,14 @@ export default function App() {
         onOpenAdmin={() => setShowAdminPanel(true)}
         onSignOut={handleSignOut}
         activeSection={activeSection}
+        bakeryName={businessConfig.bakeryName}
       />
 
       <main>
         <Hero onOpenOrder={() => setShowOrderModal(true)} />
         <Gallery onViewCollection={(cat) => setCollectionModal(cat)} />
         <Kitchen />
+        <FAQSection faqs={faqs} />
         <Reviews />
         <About />
         <Contact />
@@ -215,7 +226,7 @@ export default function App() {
       {/* Modals */}
       {showOrderModal && (
         <OrderWizard 
-          config={config} 
+          config={cakeConfig} 
           onClose={() => setShowOrderModal(false)} 
           userEmail={user?.email}
         />
@@ -229,8 +240,8 @@ export default function App() {
         <AdminDashboard 
           user={user} 
           onClose={() => setShowAdminPanel(false)} 
-          initialConfig={config}
-          onConfigUpdate={setConfig}
+          initialConfig={businessConfig}
+          onConfigUpdate={setBusinessConfig}
         />
       )}
 

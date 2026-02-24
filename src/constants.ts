@@ -1,6 +1,16 @@
-import { SiteConfig } from './types';
+import { SiteConfig, BusinessConfig } from './types';
 
 export const ADMIN_EMAILS = ['bn.gbemileke@gmail.com', 'lekingsononpoint@gmail.com'];
+
+export const DEFAULT_BUSINESS_CONFIG: BusinessConfig = {
+  bakeryName: "Sweet Moments",
+  contactEmail: "bn.gbemileke@gmail.com",
+  announcement: "Welcome to our new automated bakery experience!",
+  isMaintenance: false,
+  openingHours: "Mon-Fri: 9am - 5pm, Sat: 10am - 4pm",
+  deliveryZones: "London (Zones 1-4), SE Postcodes",
+  knowledgeBase: "We specialize in luxury artisan cakes. Our signature flavor is Madagascar Vanilla. We require 7 days notice for all orders. All cakes are nut-free unless specified."
+};
 
 export const COLORS = {
   bg: '#fdf8f4',
@@ -82,6 +92,16 @@ export const REVIEWS = [
     rating: 5,
     comment: "An anniversary cake that made my wife cry tears of joy. Minimalist but so full of character.",
   },
+];
+
+export const SITE_MAP = [
+  { name: 'Home', id: 'home', description: 'Hero section with main call to action' },
+  { name: 'Gallery', id: 'gallery', description: 'Photos of past cakes (Weddings, Birthdays, etc.)' },
+  { name: 'The Kitchen', id: 'kitchen', description: 'Information about our ingredients and process' },
+  { name: 'Reviews', id: 'reviews', description: 'Customer testimonials' },
+  { name: 'About', id: 'about', description: 'Story of the bakery and the baker' },
+  { name: 'Contact', id: 'contact', description: 'Contact form and location info' },
+  { name: 'Order Wizard', id: 'order-now', description: 'The interactive tool to customize and price a cake' },
 ];
 
 export const DEFAULT_CONFIG: SiteConfig = {

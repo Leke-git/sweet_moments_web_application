@@ -12,6 +12,7 @@ interface NavProps {
   onOpenAdmin: () => void;
   onSignOut: () => void;
   activeSection: string;
+  bakeryName: string;
 }
 
 export const Nav: React.FC<NavProps> = ({
@@ -22,7 +23,8 @@ export const Nav: React.FC<NavProps> = ({
   onOpenOrder,
   onOpenAdmin,
   onSignOut,
-  activeSection
+  activeSection,
+  bakeryName
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -43,7 +45,7 @@ export const Nav: React.FC<NavProps> = ({
         <div className="flex justify-between h-20 items-center">
           {/* Logo */}
           <div className="flex-shrink-0 flex flex-col">
-            <span className="text-2xl font-serif italic font-semibold text-primary leading-tight">Sweet Moments</span>
+            <span className="text-2xl font-serif italic font-semibold text-primary leading-tight">{bakeryName}</span>
             <span className="text-[10px] uppercase tracking-[0.2em] text-muted font-medium">Artisan Custom Cakes</span>
           </div>
 
