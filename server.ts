@@ -67,24 +67,32 @@ app.post("/api/auth/request-code", authLimiter, async (req, res) => {
 
     // 3. Send the code to n8n via Secure Proxy
     const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
-    const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
+    const n8nSecret = process.env.N8N_WEBHOOK_SECRET || "sweet_moments_secure_9922_secret";
     const { mode } = req.body;
     
     if (n8nGatewayUrl) {
-      await fetch(n8nGatewayUrl, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "X-N8N-SECRET": n8nSecret || ""
-        },
-        body: JSON.stringify({
-          email,
-          code,
-          mode: mode || 'login',
-          type: "auth_code_request",
-          timestamp: new Date().toISOString()
-        })
-      });
+      try {
+        const n8nResponse = await fetch(n8nGatewayUrl, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "X-N8N-SECRET": n8nSecret || ""
+          },
+          body: JSON.stringify({
+            email,
+            code,
+            mode: mode || 'login',
+            type: "auth_code_request",
+            timestamp: new Date().toISOString()
+          })
+        });
+        
+        if (!n8nResponse.ok) {
+          console.error(`n8n Auth Code Webhook failed with status: ${n8nResponse.status}`);
+        }
+      } catch (e) {
+        console.error("Failed to connect to n8n gateway:", e);
+      }
     }
 
     res.json({ success: true, message: "Verification code sent" });
@@ -237,7 +245,7 @@ app.post("/api/ai/chat", apiLimiter, async (req, res) => {
     // Handle Escalation
     if (text.includes("[ESCALATE]")) {
       const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
-      const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
+      const n8nSecret = process.env.N8N_WEBHOOK_SECRET || "sweet_moments_secure_9922_secret";
       
       if (n8nGatewayUrl) {
         fetch(n8nGatewayUrl, {
@@ -266,7 +274,7 @@ app.post("/api/ai/chat", apiLimiter, async (req, res) => {
 // Secure Proxy: New Enquiry
 app.post("/api/enquiry", apiLimiter, async (req, res) => {
   const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
-  const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
+  const n8nSecret = process.env.N8N_WEBHOOK_SECRET || "sweet_moments_secure_9922_secret";
 
   // Always return success to the user (Fallback mechanism)
   res.json({ success: true });
@@ -291,14 +299,14 @@ app.post("/api/enquiry", apiLimiter, async (req, res) => {
 // Secure Proxy: New Order
 app.post("/api/order", apiLimiter, async (req, res) => {
   const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
-  const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
+  const n8nSecret = process.env.N8N_WEBHOOK_SECRET || "sweet_moments_secure_9922_secret";
 
   // Always return success to the user (Fallback mechanism)
   res.json({ success: true });
 
   if (n8nGatewayUrl) {
     try {
-      await fetch(n8nGatewayUrl, {
+      const n8nResponse = await fetch(n8nGatewayUrl, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -306,6 +314,10 @@ app.post("/api/order", apiLimiter, async (req, res) => {
         },
         body: JSON.stringify({ ...req.body, type: "new_order" })
       });
+
+      if (!n8nResponse.ok) {
+        console.error(`n8n Order Webhook failed with status: ${n8nResponse.status}`);
+      }
     } catch (err) {
       console.error("n8n Order Proxy failed (background):", err);
     }

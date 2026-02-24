@@ -254,10 +254,10 @@ export const OrderWizard: React.FC<OrderWizardProps> = ({ config, onClose, userE
                 <h4 className="font-bold uppercase tracking-widest text-xs text-muted">Cake Flavour</h4>
                 <div className="flex flex-wrap gap-3">
                   {config.cake_flavours.map((f) => (
-                    <button
+                    <div
                       key={f}
                       onClick={() => updateActiveItem({ cakeFlavor: f })}
-                      className={`px-6 py-3 rounded-full border-2 transition-all flex items-center space-x-2 ${
+                      className={`cursor-pointer px-6 py-3 rounded-full border-2 transition-all flex items-center space-x-2 ${
                         activeItem.cakeFlavor === f ? 'border-primary bg-primary text-white' : 'border-border hover:border-primary/30'
                       }`}
                     >
@@ -268,7 +268,7 @@ export const OrderWizard: React.FC<OrderWizardProps> = ({ config, onClose, userE
                       >
                         <Info size={14} />
                       </button>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -276,10 +276,10 @@ export const OrderWizard: React.FC<OrderWizardProps> = ({ config, onClose, userE
                 <h4 className="font-bold uppercase tracking-widest text-xs text-muted">Filling</h4>
                 <div className="flex flex-wrap gap-3">
                   {config.fillings.map((f) => (
-                    <button
+                    <div
                       key={f}
                       onClick={() => updateActiveItem({ filling: f })}
-                      className={`px-6 py-3 rounded-full border-2 transition-all flex items-center space-x-2 ${
+                      className={`cursor-pointer px-6 py-3 rounded-full border-2 transition-all flex items-center space-x-2 ${
                         activeItem.filling === f ? 'border-primary bg-primary text-white' : 'border-border hover:border-primary/30'
                       }`}
                     >
@@ -290,7 +290,7 @@ export const OrderWizard: React.FC<OrderWizardProps> = ({ config, onClose, userE
                       >
                         <Info size={14} />
                       </button>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
