@@ -2,13 +2,36 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
 
+// Security Headers
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for Vite dev mode compatibility
+}));
+
 app.use(express.json());
+
+// Rate Limiting
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per window for auth endpoints
+  message: { error: "Too many attempts, please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 60, // 60 requests per minute for general API
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Initialize Supabase Admin (Server-side only)
 const supabaseAdmin = createClient(
@@ -23,11 +46,11 @@ const supabaseAdmin = createClient(
 );
 
 // Custom Auth Endpoint: Request 4-Digit Code
-app.post("/api/auth/request-code", async (req, res) => {
+app.post("/api/auth/request-code", authLimiter, async (req, res) => {
   const { email } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ error: "Email is required" });
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    return res.status(400).json({ error: "Valid email is required" });
   }
 
   try {
@@ -61,12 +84,12 @@ app.post("/api/auth/request-code", async (req, res) => {
     res.json({ success: true, message: "Verification code sent to n8n" });
   } catch (error: any) {
     console.error("Auth code generation error:", error);
-    res.status(500).json({ error: error.message || "Failed to generate code" });
+    res.status(500).json({ error: "Failed to generate code" });
   }
 });
 
 // Custom Auth Endpoint: Verify 4-Digit Code
-app.post("/api/auth/verify-code", async (req, res) => {
+app.post("/api/auth/verify-code", authLimiter, async (req, res) => {
   const { email, code } = req.body;
 
   if (!email || !code) {
@@ -91,7 +114,6 @@ app.post("/api/auth/verify-code", async (req, res) => {
     }
 
     // 2. Code is valid, generate a session link for the user
-    // We use magiclink type to get a valid Supabase token
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
       email,
@@ -99,7 +121,7 @@ app.post("/api/auth/verify-code", async (req, res) => {
 
     if (linkError) throw linkError;
 
-    // 3. Clean up the code
+    // 3. Clean up the code immediately to prevent reuse
     await supabaseAdmin.from("auth_codes").delete().eq("email", email);
 
     // 4. Trigger Welcome Message via n8n
@@ -112,14 +134,14 @@ app.post("/api/auth/verify-code", async (req, res) => {
       }).catch(err => console.error("Welcome webhook failed:", err));
     }
 
-    // Return the magic link properties so the frontend can sign in
+    // Return the magic link hash
     res.json({ 
       success: true, 
       hash: new URL(linkData.properties.action_link).hash 
     });
   } catch (error: any) {
     console.error("Auth verification error:", error);
-    res.status(500).json({ error: error.message || "Verification failed" });
+    res.status(500).json({ error: "Verification failed" });
   }
 });
 

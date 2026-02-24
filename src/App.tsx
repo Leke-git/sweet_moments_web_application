@@ -222,7 +222,10 @@ export default function App() {
       )}
 
       {showAdminPanel && user && ADMIN_EMAILS.includes(user.email) && (
-        <AdminDashboard onClose={() => setShowAdminPanel(false)} />
+        <AdminDashboard 
+          user={user} 
+          onClose={() => setShowAdminPanel(false)} 
+        />
       )}
 
       {legalModal && (

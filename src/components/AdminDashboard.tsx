@@ -4,7 +4,8 @@ import {
   Eye, RefreshCw, Loader2, ChevronDown, ExternalLink 
 } from '../icons';
 import { supabase } from '../lib/supabase';
-import { Order, EnquiryData } from '../types';
+import { Order, EnquiryData, User } from '../types';
+import { ADMIN_EMAILS } from '../constants';
 import { format, subDays, startOfDay, endOfDay, isWithinInterval, parseISO } from 'date-fns';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, 
@@ -13,16 +14,24 @@ import {
 
 interface AdminDashboardProps {
   onClose: () => void;
+  user: User | null;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user }) => {
   const [activeTab, setActiveTab] = React.useState<'orders' | 'enquiries' | 'analytics'>('orders');
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [enquiries, setEnquiries] = React.useState<EnquiryData[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [analyticsRange, setAnalyticsRange] = React.useState(30);
 
+  const isAdmin = user && ADMIN_EMAILS.includes(user.email);
+
   const fetchData = React.useCallback(async () => {
+    if (!isAdmin) {
+      console.error("Unauthorized access attempt to Admin Dashboard");
+      onClose();
+      return;
+    }
     setLoading(true);
     try {
       if (supabase) {
