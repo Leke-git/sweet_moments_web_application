@@ -68,6 +68,7 @@ app.post("/api/auth/request-code", authLimiter, async (req, res) => {
     // 3. Send the code to n8n via Secure Proxy
     const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
     const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
+    const { mode } = req.body;
     
     if (n8nGatewayUrl) {
       await fetch(n8nGatewayUrl, {
@@ -79,6 +80,7 @@ app.post("/api/auth/request-code", authLimiter, async (req, res) => {
         body: JSON.stringify({
           email,
           code,
+          mode: mode || 'login',
           type: "auth_code_request",
           timestamp: new Date().toISOString()
         })
@@ -118,12 +120,24 @@ app.post("/api/auth/verify-code", authLimiter, async (req, res) => {
     }
 
     // 2. Ensure user exists and is confirmed to prevent Supabase from sending its own emails
-    // We try to create the user; if they exist, Supabase will return an error which we can safely ignore
-    await supabaseAdmin.auth.admin.createUser({
+    // We try to create/update the user to ensure they are confirmed
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email,
       email_confirm: true,
-      user_metadata: { full_name: email.split('@')[0] }
+      user_metadata: { 
+        full_name: email.split('@')[0],
+        source: 'custom_otp_flow'
+      }
     });
+
+    // If user already exists, we just ensure they are confirmed
+    if (userError && userError.message.toLowerCase().includes('already registered')) {
+      const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+      const user = listData.users.find((u: any) => u.email === email);
+      if (user) {
+        await supabaseAdmin.auth.admin.updateUserById(user.id, { email_confirm: true });
+      }
+    }
 
     // 3. Generate a session link for the user
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({

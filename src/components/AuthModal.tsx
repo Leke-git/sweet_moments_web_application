@@ -11,6 +11,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
   const [code, setCode] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [step, setStep] = React.useState<'email' | 'code'>('email');
+  const [mode, setMode] = React.useState<'login' | 'signup'>('login');
+  const [stayLoggedIn, setStayLoggedIn] = React.useState(true);
 
   const handleRequestCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +21,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
       const response = await fetch('/api/auth/request-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, mode }),
       });
 
       if (!response.ok) {
@@ -43,7 +45,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
       const response = await fetch('/api/auth/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({ email, code, stayLoggedIn }),
       });
 
       if (!response.ok) {
@@ -53,11 +55,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
 
       const { hash } = await response.json();
       
-      // Sign in using the hash returned by the server
       if (supabase) {
-        // The hash contains the access token, Supabase client handles it automatically if we redirect or set it
         window.location.hash = hash;
-        // Reload to let Supabase process the hash
         window.location.reload();
       }
     } catch (error: any) {
@@ -82,11 +81,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
         <div className="p-12 relative z-10 text-center space-y-8">
           <div className="space-y-2">
             <h2 className="text-4xl font-serif italic font-bold text-dark">
-              {step === 'email' ? 'Welcome Back' : 'Verify Identity'}
+              {step === 'email' 
+                ? (mode === 'login' ? 'Welcome Back' : 'Join Us') 
+                : 'Verify Identity'}
             </h2>
             <p className="text-muted">
               {step === 'email' 
-                ? 'Sign in to manage your orders and profile.' 
+                ? (mode === 'login' ? 'Sign in to manage your orders.' : 'Create an account to start ordering.') 
                 : `Enter the 4-digit code sent to ${email}`}
             </p>
           </div>
@@ -107,6 +108,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
                   />
                 </div>
               </div>
+
+              <div className="flex items-center space-x-3 ml-4">
+                <input 
+                  type="checkbox" 
+                  id="stayLoggedIn"
+                  checked={stayLoggedIn}
+                  onChange={(e) => setStayLoggedIn(e.target.checked)}
+                  className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+                />
+                <label htmlFor="stayLoggedIn" className="text-sm text-muted cursor-pointer">Stay logged in</label>
+              </div>
               
               <button
                 disabled={isSubmitting}
@@ -115,11 +127,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
               >
                 {isSubmitting ? <Loader2 size={24} className="animate-spin" /> : (
                   <>
-                    <span>Send Code</span>
+                    <span>{mode === 'login' ? 'Send Login Code' : 'Create Account'}</span>
                     <Check size={20} />
                   </>
                 )}
               </button>
+
+              <div className="pt-4 border-t border-border">
+                <p className="text-sm text-muted">
+                  {mode === 'login' ? "New here?" : "Already have an account?"}{' '}
+                  <button 
+                    type="button"
+                    onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+                    className="text-primary font-bold hover:underline"
+                  >
+                    {mode === 'login' ? 'Create an account' : 'Sign in instead'}
+                  </button>
+                </p>
+              </div>
             </form>
           ) : (
             <form onSubmit={handleVerifyCode} className="space-y-6">

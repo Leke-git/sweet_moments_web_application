@@ -64,13 +64,17 @@ export default function App() {
           // Listen for auth changes
           supabase.auth.onAuthStateChange((_event, session) => {
             if (session?.user) {
+              const isAdmin = ADMIN_EMAILS.includes(session.user.email!);
               setUser({
                 id: session.user.id,
                 email: session.user.email!,
                 name: session.user.user_metadata.full_name || session.user.email!.split('@')[0],
-                role: ADMIN_EMAILS.includes(session.user.email!) ? 'admin' : 'customer'
+                role: isAdmin ? 'admin' : 'customer'
               });
               setShowAuthModal(false);
+              if (isAdmin) {
+                setShowAdminPanel(true);
+              }
             } else {
               setUser(null);
             }
