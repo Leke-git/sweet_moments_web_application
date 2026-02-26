@@ -30,9 +30,11 @@ export const GALLERY_CATEGORIES = [
     category: 'Ethereal Elegance',
     description: 'Bespoke tiered creations designed to be the centerpiece of your forever.',
     images: [
-      'https://images.unsplash.com/photo-1511208687438-2c5a5abb810c?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1522673607200-164883eecd18?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1535254973040-607b474cb80d?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1511208687438-2c5a5abb810c?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1522673607200-164883eecd18?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1535254973040-607b474cb80d?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=1200',
     ],
   },
   {
@@ -41,9 +43,11 @@ export const GALLERY_CATEGORIES = [
     category: 'Professional Poise',
     description: 'Elevating brand milestones and corporate gatherings with sophisticated, branded designs.',
     images: [
-      'https://images.unsplash.com/photo-1550617931-e17a7b70dce2?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1550617931-e17a7b70dce2?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=1200',
     ],
   },
   {
@@ -52,9 +56,11 @@ export const GALLERY_CATEGORIES = [
     category: 'Vibrant Celebrations',
     description: 'Transforming personal stories into edible art for every milestone.',
     images: [
-      'https://images.unsplash.com/photo-1535141192574-5d4897c12636?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1535141192574-5d4897c12636?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1530103578275-2d12f3cc0ff6?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=1200',
     ],
   },
   {
@@ -63,9 +69,11 @@ export const GALLERY_CATEGORIES = [
     category: 'Timeless Romance',
     description: 'Celebrating the journey of love with refined, intimate designs.',
     images: [
-      'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1525138016235-91982283946c?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1525138016235-91982283946c?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1511208687438-2c5a5abb810c?auto=format&fit=crop&q=80&w=1200',
+      'https://images.unsplash.com/photo-1535254973040-607b474cb80d?auto=format&fit=crop&q=80&w=1200',
     ],
   },
 ];

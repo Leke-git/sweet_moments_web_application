@@ -111,7 +111,17 @@ h1, h2, h3, h4, .font-serif {
   }
   input, textarea, select {
     font-size: 16px !important;
+    @apply bg-white dark:bg-black/20 border-border text-dark dark:text-white placeholder:text-muted/60;
   }
+  
+  /* Industry standard light mode form focus */
+  input:focus, textarea:focus {
+    @apply border-primary ring-2 ring-primary/10;
+  }
+}
+
+.footer-light {
+  background-color: #f8f3ee; /* Slightly darker than bg for contrast */
 }
 
 .animate-fade-in {

@@ -173,7 +173,7 @@ export default function App() {
         <Contact />
       </main>
 
-      <footer className="bg-white dark:bg-black/20 py-20 border-t border-border">
+      <footer className="footer-light dark:bg-black/20 py-20 border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="space-y-6">
             <div className="flex flex-col">

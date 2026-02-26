@@ -14,6 +14,62 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
   const [mode, setMode] = React.useState<'login' | 'signup'>('login');
   const [stayLoggedIn, setStayLoggedIn] = React.useState(true);
 
+  const [resendTimer, setResendTimer] = React.useState(0);
+  const codeRefs = [
+    React.useRef<HTMLInputElement>(null),
+    React.useRef<HTMLInputElement>(null),
+    React.useRef<HTMLInputElement>(null),
+    React.useRef<HTMLInputElement>(null)
+  ];
+
+  React.useEffect(() => {
+    let interval: any;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
+  const handleCodeChange = (index: number, value: string) => {
+    if (value.length > 1) value = value[0];
+    if (!/^\d*$/.test(value)) return;
+
+    const newCode = code.split('');
+    newCode[index] = value;
+    const finalCode = newCode.join('').slice(0, 4);
+    setCode(finalCode);
+
+    // Move to next input
+    if (value && index < 3) {
+      codeRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !code[index] && index > 0) {
+      codeRefs[index - 1].current?.focus();
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (resendTimer > 0) return;
+    setIsSubmitting(true);
+    try {
+      await fetch('/api/auth/request-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, mode }),
+      });
+      setResendTimer(60);
+    } catch (error) {
+      console.error("Resend error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleRequestCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -30,6 +86,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
       }
       
       setStep('code');
+      setResendTimer(60);
     } catch (error: any) {
       console.error("Auth error:", error);
       alert(error.message || "Failed to send code. Please try again.");
@@ -40,6 +97,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
 
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (code.length !== 4) return;
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/auth/verify-code', {
@@ -104,7 +162,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="eleanor@example.com"
-                    className="w-full pl-16 pr-6 py-5 rounded-2xl bg-bg dark:bg-black/20 border border-border focus:border-primary outline-none transition-all"
+                    className="w-full pl-16 pr-6 py-5 rounded-2xl bg-white dark:bg-black/20 border border-border focus:border-primary outline-none transition-all text-dark dark:text-white placeholder:text-muted/50"
                   />
                 </div>
               </div>
@@ -147,38 +205,60 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
               </div>
             </form>
           ) : (
-            <form onSubmit={handleVerifyCode} className="space-y-6">
-              <div className="space-y-2 text-left">
-                <label className="text-xs font-bold uppercase tracking-widest text-muted ml-4">4-Digit Code</label>
-                <input
-                  required
-                  type="text"
-                  maxLength={4}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="0000"
-                  className="w-full px-6 py-5 rounded-2xl bg-bg dark:bg-black/20 border border-border focus:border-primary outline-none transition-all text-center text-3xl tracking-[1em] font-bold"
-                />
+            <form onSubmit={handleVerifyCode} className="space-y-8">
+              <div className="flex justify-between gap-4">
+                {[0, 1, 2, 3].map((i) => (
+                  <input
+                    key={i}
+                    ref={codeRefs[i]}
+                    required
+                    type="text"
+                    inputMode="numeric"
+                    pattern="\d*"
+                    maxLength={1}
+                    value={code[i] || ''}
+                    onChange={(e) => handleCodeChange(i, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(i, e)}
+                    className="w-16 h-20 rounded-2xl bg-white dark:bg-black/20 border-2 border-border focus:border-primary outline-none transition-all text-center text-3xl font-bold text-dark dark:text-white"
+                  />
+                ))}
               </div>
               
-              <button
-                disabled={isSubmitting}
-                type="submit"
-                className="w-full bg-primary text-white py-5 rounded-2xl font-bold shadow-lg hover:shadow-2xl transition-all flex items-center justify-center space-x-3 disabled:opacity-50"
-              >
-                {isSubmitting ? <Loader2 size={24} className="animate-spin" /> : (
-                  <>
-                    <span>Verify & Login</span>
-                    <Check size={20} />
-                  </>
-                )}
-              </button>
+              <div className="space-y-4">
+                <button
+                  disabled={isSubmitting || code.length !== 4}
+                  type="submit"
+                  className="w-full bg-primary text-white py-5 rounded-2xl font-bold shadow-lg hover:shadow-2xl transition-all flex items-center justify-center space-x-3 disabled:opacity-50"
+                >
+                  {isSubmitting ? <Loader2 size={24} className="animate-spin" /> : (
+                    <>
+                      <span>Verify & Login</span>
+                      <Check size={20} />
+                    </>
+                  )}
+                </button>
+                
+                <div className="text-center">
+                  {resendTimer > 0 ? (
+                    <p className="text-xs text-muted">Resend code in <span className="font-bold text-primary">{resendTimer}s</span></p>
+                  ) : (
+                    <button 
+                      type="button"
+                      onClick={handleResendCode}
+                      className="text-sm text-primary font-bold hover:underline"
+                    >
+                      Didn't receive code? Resend
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <button 
                 type="button"
                 onClick={() => setStep('email')}
-                className="text-sm text-primary font-bold hover:underline"
+                className="text-xs text-muted hover:text-primary transition-colors"
               >
-                Change Email
+                ← Change Email
               </button>
             </form>
           )}
