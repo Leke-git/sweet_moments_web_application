@@ -154,6 +154,10 @@ export default function App() {
     }
   };
 
+  React.useEffect(() => {
+    console.log("Admin Dashboard link rendered in footer. Click to open.");
+  }, []);
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-bg flex flex-col items-center justify-center space-y-6">
@@ -244,7 +248,7 @@ export default function App() {
           <p className="text-xs text-dark/60 dark:text-muted">
             © {new Date().getFullYear()} Sweet Moments Artisan Bakery. All rights reserved.
           </p>
-          <div className="mt-4 flex flex-col items-center space-y-2">
+          <div className="mt-8 flex flex-col items-center space-y-4">
             {user && (
               <span className="text-[10px] text-muted font-mono bg-black/5 dark:bg-white/5 px-2 py-1 rounded">
                 Logged in as: {user.email} ({user.role})
@@ -252,10 +256,10 @@ export default function App() {
             )}
             <button 
               onClick={() => setShowAdminPanel(true)} 
-              className="text-[10px] text-primary hover:underline font-bold uppercase tracking-widest flex items-center space-x-2"
+              className="group flex items-center space-x-2 px-4 py-2 rounded-full bg-primary/5 hover:bg-primary/10 text-primary transition-all duration-300 border border-primary/10"
             >
-              <LayoutDashboard size={12} />
-              <span>Admin Dashboard</span>
+              <LayoutDashboard size={14} className="group-hover:rotate-12 transition-transform" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Admin Dashboard</span>
             </button>
           </div>
         </div>
