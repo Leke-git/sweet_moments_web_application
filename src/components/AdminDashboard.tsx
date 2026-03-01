@@ -22,6 +22,7 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user, initialConfig, onConfigUpdate }) => {
+  console.log("AdminDashboard rendering for user:", user?.email);
   const [activeTab, setActiveTab] = React.useState<'orders' | 'enquiries' | 'analytics' | 'config' | 'faqs' | 'support'>('orders');
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [enquiries, setEnquiries] = React.useState<EnquiryData[]>([]);
@@ -32,7 +33,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user, i
 
   const [editingFaq, setEditingFaq] = React.useState<Partial<FAQ> | null>(null);
 
-  const isAdmin = user && ADMIN_EMAILS.includes(user.email);
+  const isAdmin = user && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase());
 
   const handleUpdateConfig = async (e: React.FormEvent) => {
     e.preventDefault();

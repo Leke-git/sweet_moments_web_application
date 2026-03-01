@@ -55,8 +55,13 @@ export default function App() {
           // Check session
           const sessionResponse = await supabase.auth.getSession();
           const session = sessionResponse.data.session;
+          console.log("Initial session check:", session?.user?.email);
+          
           if (session?.user) {
-            const isAdmin = ADMIN_EMAILS.includes(session.user.email!);
+            const userEmail = session.user.email?.toLowerCase() || '';
+            const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail);
+            console.log("Is Admin (Initial):", isAdmin);
+            
             setUser({
               id: session.user.id,
               email: session.user.email!,
@@ -66,14 +71,18 @@ export default function App() {
             
             // Auto-show admin panel if admin is logged in on load
             if (isAdmin) {
+              console.log("Auto-opening admin panel...");
               setShowAdminPanel(true);
             }
           }
 
           // Listen for auth changes
           supabase.auth.onAuthStateChange((_event, session) => {
+            console.log("Auth state change:", _event, session?.user?.email);
             if (session?.user) {
-              const isAdmin = ADMIN_EMAILS.includes(session.user.email!);
+              const userEmail = session.user.email?.toLowerCase() || '';
+              const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail);
+              
               setUser({
                 id: session.user.id,
                 email: session.user.email!,
@@ -91,6 +100,7 @@ export default function App() {
               }
 
               if (isAdmin) {
+                console.log("Opening admin panel due to auth change...");
                 setShowAdminPanel(true);
               }
             } else {
@@ -208,6 +218,9 @@ export default function App() {
               <li><a href="#gallery" className="hover:text-primary transition-colors">Gallery</a></li>
               <li><a href="#kitchen" className="hover:text-primary transition-colors">The Kitchen</a></li>
               <li><a href="#about" className="hover:text-primary transition-colors">Meet Sarah</a></li>
+              {user && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase()) && (
+                <li><button onClick={() => setShowAdminPanel(true)} className="text-accent font-bold hover:underline">Admin Dashboard</button></li>
+              )}
             </ul>
           </div>
 
@@ -252,7 +265,7 @@ export default function App() {
         <AuthModal onClose={() => setShowAuthModal(false)} />
       )}
 
-      {showAdminPanel && user && ADMIN_EMAILS.includes(user.email) && (
+      {showAdminPanel && user && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase()) && (
         <AdminDashboard 
           user={user} 
           onClose={() => setShowAdminPanel(false)} 

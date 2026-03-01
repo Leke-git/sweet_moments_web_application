@@ -37,7 +37,7 @@ export const Nav: React.FC<NavProps> = ({
     { name: 'Contact', href: '#contact' },
   ];
 
-  const isAdmin = user && ADMIN_EMAILS.includes(user.email);
+  const isAdmin = user && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase());
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 glass border-b border-border">
