@@ -1,6 +1,9 @@
 import { SiteConfig, BusinessConfig } from './types';
 
-export const ADMIN_EMAILS = ['bn.gbemileke@gmail.com', 'lekingsononpoint@gmail.com'];
+export const ADMIN_EMAILS = [
+  'bn.gbemileke@gmail.com',
+  'lekingsononpoint@gmail.com'
+];
 
 export const DEFAULT_BUSINESS_CONFIG: BusinessConfig = {
   bakeryName: "Sweet Moments",

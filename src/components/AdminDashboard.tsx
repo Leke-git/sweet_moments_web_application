@@ -33,7 +33,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user, i
 
   const [editingFaq, setEditingFaq] = React.useState<Partial<FAQ> | null>(null);
 
-  const isAdmin = user && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase());
+  const isAdmin = user && ADMIN_EMAILS.some(e => e.trim().toLowerCase() === user.email.trim().toLowerCase());
 
   const handleUpdateConfig = async (e: React.FormEvent) => {
     e.preventDefault();

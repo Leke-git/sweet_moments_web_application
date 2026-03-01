@@ -37,7 +37,7 @@ export const Nav: React.FC<NavProps> = ({
     { name: 'Contact', href: '#contact' },
   ];
 
-  const isAdmin = user && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase());
+  const isAdmin = user && ADMIN_EMAILS.some(e => e.trim().toLowerCase() === user.email.trim().toLowerCase());
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 glass border-b border-border">
@@ -87,13 +87,16 @@ export const Nav: React.FC<NavProps> = ({
                     </button>
                   </div>
                 )}
-                <button
-                  onClick={onSignOut}
-                  className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-muted"
-                  title="Sign Out"
-                >
-                  <LogOut size={20} />
-                </button>
+                <div className="flex items-center space-x-3">
+                  <span className="text-[10px] text-muted hidden sm:inline-block font-mono bg-black/5 dark:bg-white/5 px-2 py-1 rounded">{user.email}</span>
+                  <button
+                    onClick={onSignOut}
+                    className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-muted"
+                    title="Sign Out"
+                  >
+                    <LogOut size={20} />
+                  </button>
+                </div>
               </div>
             ) : (
               <button

@@ -56,11 +56,12 @@ export default function App() {
           const sessionResponse = await supabase.auth.getSession();
           const session = sessionResponse.data.session;
           console.log("Initial session check:", session?.user?.email);
+          console.log("Admin list:", ADMIN_EMAILS);
           
           if (session?.user) {
-            const userEmail = session.user.email?.toLowerCase() || '';
-            const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail);
-            console.log("Is Admin (Initial):", isAdmin);
+            const userEmail = (session.user.email || '').trim().toLowerCase();
+            const isAdmin = ADMIN_EMAILS.some(e => e.trim().toLowerCase() === userEmail);
+            console.log("Is Admin (Initial):", isAdmin, "for email:", userEmail);
             
             setUser({
               id: session.user.id,
@@ -73,6 +74,7 @@ export default function App() {
             if (isAdmin) {
               console.log("Auto-opening admin panel...");
               setShowAdminPanel(true);
+              alert(`Admin Access Granted for ${userEmail}`);
             }
           }
 
@@ -80,8 +82,8 @@ export default function App() {
           supabase.auth.onAuthStateChange((_event, session) => {
             console.log("Auth state change:", _event, session?.user?.email);
             if (session?.user) {
-              const userEmail = session.user.email?.toLowerCase() || '';
-              const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail);
+              const userEmail = (session.user.email || '').trim().toLowerCase();
+              const isAdmin = ADMIN_EMAILS.some(e => e.trim().toLowerCase() === userEmail);
               
               setUser({
                 id: session.user.id,
@@ -95,7 +97,9 @@ export default function App() {
               const justLoggedIn = sessionStorage.getItem('just_logged_in');
               if (justLoggedIn) {
                 sessionStorage.removeItem('just_logged_in');
-                const welcomeMsg = isAdmin ? "Welcome back, Admin! Opening dashboard..." : "Welcome back! You are now logged in.";
+                const welcomeMsg = isAdmin 
+                  ? `Welcome back, Admin (${userEmail})! Opening dashboard...` 
+                  : `Welcome back! You are logged in as ${userEmail}.`;
                 alert(welcomeMsg);
               }
 
@@ -218,7 +222,7 @@ export default function App() {
               <li><a href="#gallery" className="hover:text-primary transition-colors">Gallery</a></li>
               <li><a href="#kitchen" className="hover:text-primary transition-colors">The Kitchen</a></li>
               <li><a href="#about" className="hover:text-primary transition-colors">Meet Sarah</a></li>
-              {user && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase()) && (
+              {user && ADMIN_EMAILS.some(e => e.trim().toLowerCase() === user.email.trim().toLowerCase()) && (
                 <li><button onClick={() => setShowAdminPanel(true)} className="text-accent font-bold hover:underline">Admin Dashboard</button></li>
               )}
             </ul>
@@ -248,7 +252,14 @@ export default function App() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 pt-8 border-t border-border text-center">
-          <p className="text-xs text-dark/60 dark:text-muted">© {new Date().getFullYear()} Sweet Moments Artisan Bakery. All rights reserved.</p>
+          <p className="text-xs text-dark/60 dark:text-muted">
+            © {new Date().getFullYear()} Sweet Moments Artisan Bakery. All rights reserved.
+            {user && (
+              <span className="ml-4 px-2 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">
+                Logged in as: {user.email} ({user.role})
+              </span>
+            )}
+          </p>
         </div>
       </footer>
 
@@ -265,7 +276,7 @@ export default function App() {
         <AuthModal onClose={() => setShowAuthModal(false)} />
       )}
 
-      {showAdminPanel && user && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase()) && (
+      {showAdminPanel && user && ADMIN_EMAILS.some(e => e.trim().toLowerCase() === user.email.trim().toLowerCase()) && (
         <AdminDashboard 
           user={user} 
           onClose={() => setShowAdminPanel(false)} 
