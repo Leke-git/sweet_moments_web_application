@@ -128,8 +128,10 @@ export const OrderWizard: React.FC<OrderWizardProps> = ({ config, onClose, userE
 
     setIsSubmitting(true);
     try {
+      console.log("Starting order submission...", formData);
       // Get current user ID if logged in
       const { data: { session } } = await supabase.auth.getSession();
+      console.log("Current session:", session);
       
       const orderData = {
         customer_name: formData.customerName,
@@ -144,22 +146,34 @@ export const OrderWizard: React.FC<OrderWizardProps> = ({ config, onClose, userE
         user_id: session?.user?.id || null
       };
 
+      console.log("Inserting order into Supabase...", orderData);
       if (supabase) {
-        const { error } = await supabase.from('orders').insert([orderData]);
-        if (error) throw error;
+        const { data, error } = await supabase.from('orders').insert([orderData]).select();
+        if (error) {
+          console.error("Supabase insert error:", error);
+          throw error;
+        }
+        console.log("Supabase insert success:", data);
       }
 
+      console.log("Triggering n8n order notification...");
       // Trigger n8n via Secure Server Proxy
-      await fetch('/api/order', {
+      const n8nResponse = await fetch('/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
-      }).catch(err => console.error("Order notification failed:", err));
+      });
+      
+      if (!n8nResponse.ok) {
+        console.warn("Order notification API returned non-ok status:", n8nResponse.status);
+      } else {
+        console.log("Order notification triggered successfully");
+      }
 
       setOrderComplete(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Order submission failed:", error);
-      alert("Something went wrong. Please try again.");
+      alert(`Something went wrong: ${error.message || "Please try again."}`);
     } finally {
       setIsSubmitting(false);
     }

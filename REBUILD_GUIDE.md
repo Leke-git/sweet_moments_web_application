@@ -32,11 +32,13 @@ Set these in your hosting provider (e.g., Vercel):
 ---
 
 ## 🗄️ 3. Supabase SQL Setup
-Run this in the **Supabase SQL Editor** to create the required tables and security policies:
+Run this in the **Supabase SQL Editor** to create the required tables and security policies. 
+
+> **IMPORTANT**: Replace `your@email.com` on line 102 with your actual admin email (e.g. `bn.gbemileke@gmail.com`).
 
 ```sql
 -- 1. Orders Table
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   customer_name TEXT NOT NULL,
@@ -52,7 +54,7 @@ CREATE TABLE orders (
 );
 
 -- 2. Enquiries Table
-CREATE TABLE enquiries (
+CREATE TABLE IF NOT EXISTS enquiries (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   name TEXT NOT NULL,
@@ -63,21 +65,22 @@ CREATE TABLE enquiries (
 );
 
 -- 3. Site Config Table
-CREATE TABLE site_config (
+CREATE TABLE IF NOT EXISTS site_config (
   id SERIAL PRIMARY KEY,
   config JSONB NOT NULL
 );
-INSERT INTO site_config (id, config) VALUES (1, '{
+INSERT INTO site_config (id, config) 
+VALUES (1, '{
   "bakeryName": "Sweet Moments by Sarah",
   "contactEmail": "sarah@example.com",
   "openingHours": "Mon-Fri: 9am-6pm",
   "deliveryZones": "London Zones 1-4",
   "knowledgeBase": "We specialize in artisanal bespoke cakes...",
   "isMaintenance": false
-}');
+}') ON CONFLICT (id) DO NOTHING;
 
 -- 4. FAQs Table
-CREATE TABLE faqs (
+CREATE TABLE IF NOT EXISTS faqs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   question TEXT NOT NULL,
   answer TEXT NOT NULL,
@@ -86,7 +89,7 @@ CREATE TABLE faqs (
 );
 
 -- 5. Auth Codes (Custom OTP)
-CREATE TABLE auth_codes (
+CREATE TABLE IF NOT EXISTS auth_codes (
   email TEXT PRIMARY KEY,
   code TEXT NOT NULL,
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -96,10 +99,20 @@ CREATE TABLE auth_codes (
 -- 6. RLS Policies
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE enquiries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
+ALTER TABLE faqs ENABLE ROW LEVEL SECURITY;
+
+-- Public Access
 CREATE POLICY "Public Insert Orders" ON orders FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Insert Enquiries" ON enquiries FOR INSERT WITH CHECK (true);
--- Admin Policy (Replace with your emails)
-CREATE POLICY "Admin Manage" ON orders FOR ALL USING (auth.jwt() ->> 'email' IN ('your@email.com'));
+CREATE POLICY "Public Read Config" ON site_config FOR SELECT USING (true);
+CREATE POLICY "Public Read FAQs" ON faqs FOR SELECT USING (true);
+
+-- Admin Access (REPLACE 'your@email.com' with your actual email)
+CREATE POLICY "Admin Manage Orders" ON orders FOR ALL USING (auth.jwt() ->> 'email' IN ('your@email.com'));
+CREATE POLICY "Admin Manage Enquiries" ON enquiries FOR ALL USING (auth.jwt() ->> 'email' IN ('your@email.com'));
+CREATE POLICY "Admin Manage Config" ON site_config FOR ALL USING (auth.jwt() ->> 'email' IN ('your@email.com'));
+CREATE POLICY "Admin Manage FAQs" ON faqs FOR ALL USING (auth.jwt() ->> 'email' IN ('your@email.com'));
 ```
 
 ---

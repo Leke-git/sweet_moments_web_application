@@ -56,12 +56,18 @@ export default function App() {
           const sessionResponse = await supabase.auth.getSession();
           const session = sessionResponse.data.session;
           if (session?.user) {
+            const isAdmin = ADMIN_EMAILS.includes(session.user.email!);
             setUser({
               id: session.user.id,
               email: session.user.email!,
               name: session.user.user_metadata.full_name || session.user.email!.split('@')[0],
-              role: ADMIN_EMAILS.includes(session.user.email!) ? 'admin' : 'customer'
+              role: isAdmin ? 'admin' : 'customer'
             });
+            
+            // Auto-show admin panel if admin is logged in on load
+            if (isAdmin) {
+              setShowAdminPanel(true);
+            }
           }
 
           // Listen for auth changes
@@ -80,6 +86,7 @@ export default function App() {
               }
             } else {
               setUser(null);
+              setShowAdminPanel(false);
             }
           });
 

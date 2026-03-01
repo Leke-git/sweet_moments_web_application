@@ -58,19 +58,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, user, i
     setLoading(true);
     try {
       if (supabase) {
-        const [ordersRes, enquiriesRes] = await Promise.all([
+        const [ordersRes, enquiriesRes, faqsRes] = await Promise.all([
           supabase.from('orders').select('*').order('created_at', { ascending: false }),
-          supabase.from('enquiries').select('*').order('created_at', { ascending: false })
+          supabase.from('enquiries').select('*').order('created_at', { ascending: false }),
+          supabase.from('faqs').select('*').order('order_index')
         ]);
+        
+        if (ordersRes.error) {
+          console.error("Orders fetch error:", ordersRes.error);
+          if (ordersRes.error.message.includes('not found')) {
+            alert("The 'orders' table is missing in Supabase. Please run the SQL setup script.");
+          }
+        }
+        if (enquiriesRes.error) {
+          console.error("Enquiries fetch error:", enquiriesRes.error);
+          if (enquiriesRes.error.message.includes('not found')) {
+            alert("The 'enquiries' table is missing in Supabase. Please run the SQL setup script.");
+          }
+        }
+        
         if (ordersRes.data) setOrders(ordersRes.data);
         if (enquiriesRes.data) setEnquiries(enquiriesRes.data);
+        if (faqsRes.data) setFaqs(faqsRes.data);
       }
     } catch (error) {
       console.error("Admin fetch error:", error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAdmin, onClose]);
 
   React.useEffect(() => {
     fetchData();
