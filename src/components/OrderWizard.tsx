@@ -91,19 +91,24 @@ export const OrderWizard: React.FC<OrderWizardProps> = ({ config, onClose, userE
 
   const handleGenerateMockup = async () => {
     setIsGeneratingMockup(true);
-    const mockup = await generateCakeVisualMockup({
-      type: config.cake_types.find(t => t.id === activeItem.selectedCakeType)?.name || '',
-      flavor: activeItem.cakeFlavor,
-      filling: activeItem.filling,
-      frosting: activeItem.frosting,
-      message: activeItem.customMessage,
-      inspirationImage: activeItem.inspirationImage ? {
-        data: activeItem.inspirationImage,
-        mimeType: activeItem.inspirationMimeType || 'image/png'
-      } : undefined
-    });
-    updateActiveItem({ mockupUrl: mockup });
-    setIsGeneratingMockup(false);
+    try {
+      const mockup = await generateCakeVisualMockup({
+        type: config.cake_types.find(t => t.id === activeItem.selectedCakeType)?.name || '',
+        flavor: activeItem.cakeFlavor,
+        filling: activeItem.filling,
+        frosting: activeItem.frosting,
+        message: activeItem.customMessage,
+        inspirationImage: activeItem.inspirationImage ? {
+          data: activeItem.inspirationImage,
+          mimeType: activeItem.inspirationMimeType || 'image/png'
+        } : undefined
+      });
+      updateActiveItem({ mockupUrl: mockup });
+    } catch (error) {
+      console.error("Mockup generation failed:", error);
+    } finally {
+      setIsGeneratingMockup(false);
+    }
   };
 
   const handleExplain = async (term: string, category: string) => {
