@@ -93,6 +93,8 @@ app.post("/api/auth/request-code", authLimiter, async (req, res) => {
       } catch (e) {
         console.error("Failed to connect to n8n gateway:", e);
       }
+    } else {
+      console.warn("N8N_GATEWAY_URL is not defined. Auth code will not be sent to user.");
     }
 
     res.json({ success: true, message: "Verification code sent" });
@@ -293,6 +295,8 @@ app.post("/api/enquiry", apiLimiter, async (req, res) => {
       console.error("n8n Enquiry Proxy failed (background):", err);
       // In a real app, you'd queue this for retry
     }
+  } else {
+    console.warn("N8N_GATEWAY_URL is not defined. Enquiry notification will not be sent.");
   }
 });
 
@@ -321,6 +325,8 @@ app.post("/api/order", apiLimiter, async (req, res) => {
     } catch (err) {
       console.error("n8n Order Proxy failed (background):", err);
     }
+  } else {
+    console.warn("N8N_GATEWAY_URL is not defined. Order notification will not be sent.");
   }
 });
 
