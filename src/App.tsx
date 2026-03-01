@@ -156,6 +156,7 @@ export default function App() {
 
   React.useEffect(() => {
     console.log("Admin Dashboard link rendered in footer. Click to open.");
+    (window as any).APP_VERSION = "1.0.2";
   }, []);
 
   if (loading) {
@@ -178,6 +179,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-bg text-dark selection:bg-primary/20 selection:text-primary">
+      <div className="bg-red-600 text-white text-center py-2 text-xs font-bold uppercase tracking-widest z-[100] relative">
+        Deployment Verification: v1.0.2
+      </div>
       <Nav 
         darkMode={darkMode}
         setDarkMode={setDarkMode}
@@ -246,7 +250,7 @@ export default function App() {
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 pt-8 border-t border-border text-center">
           <p className="text-xs text-dark/60 dark:text-muted">
-            © {new Date().getFullYear()} Sweet Moments Artisan Bakery. All rights reserved.
+            © {new Date().getFullYear()} Sweet Moments Artisan Bakery. All rights reserved. • v1.0.2
           </p>
           <div className="mt-8 flex flex-col items-center space-y-4">
             {user && (
