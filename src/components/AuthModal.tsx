@@ -113,10 +113,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
 
       const { hash } = await response.json();
       
-      if (supabase) {
+      if (supabase && hash) {
         sessionStorage.setItem('just_logged_in', 'true');
-        window.location.hash = hash;
-        window.location.reload();
+        
+        // Parse the hash manually to set the session without a full reload
+        // The hash looks like #access_token=...&refresh_token=...&...
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        
+        if (accessToken && refreshToken) {
+          console.log("Setting session manually...");
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (error) {
+            console.error("Manual session set failed:", error);
+            // Fallback to reload if manual set fails
+            window.location.hash = hash;
+            window.location.reload();
+          } else {
+            console.log("Session set successfully!");
+            onClose();
+          }
+        } else {
+          // Fallback to reload if hash parsing fails
+          window.location.hash = hash;
+          window.location.reload();
+        }
       }
     } catch (error: any) {
       console.error("Verification error:", error);

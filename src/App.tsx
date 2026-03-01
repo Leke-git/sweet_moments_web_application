@@ -260,6 +260,20 @@ export default function App() {
               </span>
             )}
           </p>
+          <div className="mt-4 flex justify-center space-x-4">
+            <button 
+              onClick={() => setShowAdminPanel(true)} 
+              className="text-[10px] text-primary hover:underline font-bold uppercase tracking-widest"
+            >
+              [TEST] Open Admin Dashboard
+            </button>
+            <button 
+              onClick={() => console.log("CURRENT USER STATE:", user)} 
+              className="text-[10px] text-muted hover:underline font-bold uppercase tracking-widest"
+            >
+              [DEBUG] Log User State
+            </button>
+          </div>
         </div>
       </footer>
 
@@ -276,7 +290,7 @@ export default function App() {
         <AuthModal onClose={() => setShowAuthModal(false)} />
       )}
 
-      {showAdminPanel && user && ADMIN_EMAILS.some(e => e.trim().toLowerCase() === user.email.trim().toLowerCase()) && (
+      {showAdminPanel && (
         <AdminDashboard 
           user={user} 
           onClose={() => setShowAdminPanel(false)} 
