@@ -70,6 +70,7 @@ app.post("/api/auth/request-code", authLimiter, async (req, res) => {
     const { mode } = req.body;
     
     if (n8nGatewayUrl) {
+      console.log(`Triggering n8n auth code request for ${email}...`);
       try {
         const n8nResponse = await fetch(n8nGatewayUrl, {
           method: "POST",
@@ -88,6 +89,8 @@ app.post("/api/auth/request-code", authLimiter, async (req, res) => {
         
         if (!n8nResponse.ok) {
           console.error(`n8n Auth Code Webhook failed with status: ${n8nResponse.status}`);
+        } else {
+          console.log("n8n auth code request triggered successfully");
         }
       } catch (e) {
         console.error("Failed to connect to n8n gateway:", e);
@@ -163,13 +166,17 @@ app.post("/api/auth/verify-code", authLimiter, async (req, res) => {
     const n8nGatewayUrl = process.env.N8N_GATEWAY_URL;
     const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
     if (n8nGatewayUrl) {
-      fetch(n8nGatewayUrl, {
+      console.log(`Triggering n8n welcome message for ${email}...`);
+      await fetch(n8nGatewayUrl, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "X-N8N-SECRET": n8nSecret || ""
         },
         body: JSON.stringify({ email, type: "welcome_message" })
+      }).then(res => {
+        if (res.ok) console.log("n8n welcome message triggered successfully");
+        else console.error(`n8n welcome message failed with status: ${res.status}`);
       }).catch(err => console.error("Welcome webhook failed:", err));
     }
 
@@ -281,8 +288,9 @@ app.post("/api/enquiry", apiLimiter, async (req, res) => {
   res.json({ success: true });
 
   if (n8nGatewayUrl) {
+    console.log("Triggering n8n enquiry notification...");
     try {
-      await fetch(n8nGatewayUrl, {
+      const n8nResponse = await fetch(n8nGatewayUrl, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -290,9 +298,10 @@ app.post("/api/enquiry", apiLimiter, async (req, res) => {
         },
         body: JSON.stringify({ ...req.body, type: "new_enquiry" })
       });
+      if (n8nResponse.ok) console.log("n8n enquiry notification triggered successfully");
+      else console.error(`n8n enquiry notification failed with status: ${n8nResponse.status}`);
     } catch (err) {
       console.error("n8n Enquiry Proxy failed (background):", err);
-      // In a real app, you'd queue this for retry
     }
   } else {
     console.warn("N8N_GATEWAY_URL is not defined. Enquiry notification will not be sent.");
@@ -308,6 +317,7 @@ app.post("/api/order", apiLimiter, async (req, res) => {
   res.json({ success: true });
 
   if (n8nGatewayUrl) {
+    console.log("Triggering n8n order notification...");
     try {
       const n8nResponse = await fetch(n8nGatewayUrl, {
         method: "POST",
@@ -320,6 +330,8 @@ app.post("/api/order", apiLimiter, async (req, res) => {
 
       if (!n8nResponse.ok) {
         console.error(`n8n Order Webhook failed with status: ${n8nResponse.status}`);
+      } else {
+        console.log("n8n order notification triggered successfully");
       }
     } catch (err) {
       console.error("n8n Order Proxy failed (background):", err);
