@@ -123,19 +123,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
         const refreshToken = params.get('refresh_token');
         
         if (accessToken && refreshToken) {
-          console.log("Setting session manually...");
           const { error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
           });
           
           if (error) {
-            console.error("Manual session set failed:", error);
             // Fallback to reload if manual set fails
             window.location.hash = hash;
             window.location.reload();
           } else {
-            console.log("Session set successfully!");
             onClose();
           }
         } else {

@@ -16,7 +16,7 @@ import { FAQSection } from './components/FAQSection';
 import { SiteConfig, BusinessConfig, User, FAQ } from './types';
 import { DEFAULT_CONFIG, ADMIN_EMAILS, GALLERY_CATEGORIES, DEFAULT_BUSINESS_CONFIG } from './constants';
 import { supabase } from './lib/supabase';
-import { Loader2 } from './icons';
+import { Loader2, LayoutDashboard } from './icons';
 
 export default function App() {
   const [darkMode, setDarkMode] = React.useState(() => {
@@ -55,13 +55,10 @@ export default function App() {
           // Check session
           const sessionResponse = await supabase.auth.getSession();
           const session = sessionResponse.data.session;
-          console.log("Initial session check:", session?.user?.email);
-          console.log("Admin list:", ADMIN_EMAILS);
           
           if (session?.user) {
             const userEmail = (session.user.email || '').trim().toLowerCase();
             const isAdmin = ADMIN_EMAILS.some(e => e.trim().toLowerCase() === userEmail);
-            console.log("Is Admin (Initial):", isAdmin, "for email:", userEmail);
             
             setUser({
               id: session.user.id,
@@ -72,15 +69,12 @@ export default function App() {
             
             // Auto-show admin panel if admin is logged in on load
             if (isAdmin) {
-              console.log("Auto-opening admin panel...");
               setShowAdminPanel(true);
-              alert(`Admin Access Granted for ${userEmail}`);
             }
           }
 
           // Listen for auth changes
           supabase.auth.onAuthStateChange((_event, session) => {
-            console.log("Auth state change:", _event, session?.user?.email);
             if (session?.user) {
               const userEmail = (session.user.email || '').trim().toLowerCase();
               const isAdmin = ADMIN_EMAILS.some(e => e.trim().toLowerCase() === userEmail);
@@ -98,13 +92,12 @@ export default function App() {
               if (justLoggedIn) {
                 sessionStorage.removeItem('just_logged_in');
                 const welcomeMsg = isAdmin 
-                  ? `Welcome back, Admin (${userEmail})! Opening dashboard...` 
-                  : `Welcome back! You are logged in as ${userEmail}.`;
+                  ? `Welcome back, Admin!` 
+                  : `Welcome back! You are now logged in.`;
                 alert(welcomeMsg);
               }
 
               if (isAdmin) {
-                console.log("Opening admin panel due to auth change...");
                 setShowAdminPanel(true);
               }
             } else {
@@ -187,7 +180,6 @@ export default function App() {
         user={user}
         onOpenAuth={() => setShowAuthModal(true)}
         onOpenOrder={() => setShowOrderModal(true)}
-        onOpenAdmin={() => setShowAdminPanel(true)}
         onSignOut={handleSignOut}
         activeSection={activeSection}
         bakeryName={businessConfig.bakeryName}
@@ -222,9 +214,6 @@ export default function App() {
               <li><a href="#gallery" className="hover:text-primary transition-colors">Gallery</a></li>
               <li><a href="#kitchen" className="hover:text-primary transition-colors">The Kitchen</a></li>
               <li><a href="#about" className="hover:text-primary transition-colors">Meet Sarah</a></li>
-              {user && ADMIN_EMAILS.some(e => e.trim().toLowerCase() === user.email.trim().toLowerCase()) && (
-                <li><button onClick={() => setShowAdminPanel(true)} className="text-accent font-bold hover:underline">Admin Dashboard</button></li>
-              )}
             </ul>
           </div>
 
@@ -254,24 +243,19 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 pt-8 border-t border-border text-center">
           <p className="text-xs text-dark/60 dark:text-muted">
             © {new Date().getFullYear()} Sweet Moments Artisan Bakery. All rights reserved.
+          </p>
+          <div className="mt-4 flex flex-col items-center space-y-2">
             {user && (
-              <span className="ml-4 px-2 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">
+              <span className="text-[10px] text-muted font-mono bg-black/5 dark:bg-white/5 px-2 py-1 rounded">
                 Logged in as: {user.email} ({user.role})
               </span>
             )}
-          </p>
-          <div className="mt-4 flex justify-center space-x-4">
             <button 
               onClick={() => setShowAdminPanel(true)} 
-              className="text-[10px] text-primary hover:underline font-bold uppercase tracking-widest"
+              className="text-[10px] text-primary hover:underline font-bold uppercase tracking-widest flex items-center space-x-2"
             >
-              [TEST] Open Admin Dashboard
-            </button>
-            <button 
-              onClick={() => console.log("CURRENT USER STATE:", user)} 
-              className="text-[10px] text-muted hover:underline font-bold uppercase tracking-widest"
-            >
-              [DEBUG] Log User State
+              <LayoutDashboard size={12} />
+              <span>Admin Dashboard</span>
             </button>
           </div>
         </div>

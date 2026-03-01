@@ -9,7 +9,6 @@ interface NavProps {
   user: User | null;
   onOpenAuth: () => void;
   onOpenOrder: () => void;
-  onOpenAdmin: () => void;
   onSignOut: () => void;
   activeSection: string;
   bakeryName: string;
@@ -21,7 +20,6 @@ export const Nav: React.FC<NavProps> = ({
   user,
   onOpenAuth,
   onOpenOrder,
-  onOpenAdmin,
   onSignOut,
   activeSection,
   bakeryName
@@ -75,16 +73,6 @@ export const Nav: React.FC<NavProps> = ({
 
             {user ? (
               <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-accent bg-accent/10 px-2 py-1 rounded-md hidden lg:inline-block">Admin Mode (TEST)</span>
-                  <button
-                    onClick={onOpenAdmin}
-                    className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-accent"
-                    title="Admin Dashboard"
-                  >
-                    <LayoutDashboard size={20} />
-                  </button>
-                </div>
                 <div className="flex items-center space-x-3">
                   <span className="text-[10px] text-muted hidden sm:inline-block font-mono bg-black/5 dark:bg-white/5 px-2 py-1 rounded">{user.email}</span>
                   <button
@@ -150,15 +138,6 @@ export const Nav: React.FC<NavProps> = ({
             <div className="pt-4 pb-2 flex flex-col space-y-3 px-3">
               {user ? (
                 <>
-                  {isAdmin && (
-                    <button
-                      onClick={() => { onOpenAdmin(); setIsOpen(false); }}
-                      className="flex items-center space-x-2 text-accent font-medium"
-                    >
-                      <LayoutDashboard size={20} />
-                      <span>Admin Dashboard</span>
-                    </button>
-                  )}
                   <button
                     onClick={() => { onSignOut(); setIsOpen(false); }}
                     className="flex items-center space-x-2 text-muted font-medium"

@@ -194,6 +194,22 @@ app.post("/api/auth/verify-code", authLimiter, async (req, res) => {
   }
 });
 
+// Admin Password Verification
+app.post("/api/admin/verify", (req, res) => {
+  const { password } = req.body;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  
+  if (!adminPassword) {
+    return res.status(500).json({ error: "Admin password not configured in environment" });
+  }
+  
+  if (password === adminPassword) {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ error: "Incorrect password" });
+  }
+});
+
 // AI Support Agent Endpoint
 app.post("/api/ai/chat", apiLimiter, async (req, res) => {
   const { message, history, userEmail } = req.body;
