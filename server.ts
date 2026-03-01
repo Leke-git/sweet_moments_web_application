@@ -1,5 +1,4 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import helmet from "helmet";
@@ -330,9 +329,13 @@ app.post("/api/order", apiLimiter, async (req, res) => {
   }
 });
 
+// Export for Vercel
+export default app;
+
 // Vite middleware for development
 async function setupVite() {
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -340,14 +343,20 @@ async function setupVite() {
     app.use(vite.middlewares);
   } else {
     app.use(express.static("dist"));
-    app.get("*", (req, res) => {
-      res.sendFile("dist/index.html", { root: "." });
-    });
+    // On Vercel, we don't need this catch-all because vercel.json handles it
+    if (!process.env.VERCEL) {
+      app.get("*", (req, res) => {
+        res.sendFile("dist/index.html", { root: "." });
+      });
+    }
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  // Only listen if not in a serverless environment (like Vercel)
+  if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
 }
 
 setupVite();
