@@ -65,13 +65,14 @@ export const generateCakeVisualMockup = async (details: MockupDetails) => {
       });
     }
 
-    console.log("Calling Gemini API (gemini-2.5-flash-image)...");
+    console.log("Calling Gemini API (gemini-3.1-flash-image-preview)...");
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: { parts },
+      model: 'gemini-3.1-flash-image-preview',
+      contents: [{ parts }],
       config: { 
         imageConfig: { 
-          aspectRatio: "1:1" 
+          aspectRatio: "1:1",
+          imageSize: "1K"
         } 
       }
     });
@@ -87,10 +88,27 @@ export const generateCakeVisualMockup = async (details: MockupDetails) => {
       }
     }
     
-    console.warn("Gemini returned a response but no image data was found in parts.");
+    console.warn("Gemini returned a response but no image data was found in parts. Check safety filters or model availability.");
     return null;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Visual Mockup AI failed:", error);
+    // If it's a 404, maybe the model is not available in this region or for this key
+    if (error.message?.includes('404') || error.message?.includes('not found')) {
+      console.warn("Retrying with fallback model gemini-2.5-flash-image...");
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash-image',
+          contents: [{ parts: [{ text: `A professional food photo of a ${details.type} cake with ${details.flavor} flavor and ${details.frosting} frosting.` }] }],
+          config: { imageConfig: { aspectRatio: "1:1" } }
+        });
+        if (response.candidates?.[0]?.content?.parts?.[0]?.inlineData) {
+          return `data:image/png;base64,${response.candidates[0].content.parts[0].inlineData.data}`;
+        }
+      } catch (retryError) {
+        console.error("Fallback model also failed:", retryError);
+      }
+    }
     return null;
   }
 };

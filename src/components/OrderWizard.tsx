@@ -103,9 +103,15 @@ export const OrderWizard: React.FC<OrderWizardProps> = ({ config, onClose, userE
           mimeType: activeItem.inspirationMimeType || 'image/png'
         } : undefined
       });
-      updateActiveItem({ mockupUrl: mockup });
-    } catch (error) {
+      
+      if (mockup) {
+        updateActiveItem({ mockupUrl: mockup });
+      } else {
+        alert("AI was unable to generate a mockup for these specific details. Please try adjusting your description or flavor choices.");
+      }
+    } catch (error: any) {
       console.error("Mockup generation failed:", error);
+      alert(`Mockup generation failed: ${error.message || "Please try again."}`);
     } finally {
       setIsGeneratingMockup(false);
     }

@@ -102,6 +102,16 @@ ALTER TABLE enquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE faqs ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies to avoid "already exists" errors
+DROP POLICY IF EXISTS "Public Insert Orders" ON orders;
+DROP POLICY IF EXISTS "Public Insert Enquiries" ON enquiries;
+DROP POLICY IF EXISTS "Public Read Config" ON site_config;
+DROP POLICY IF EXISTS "Public Read FAQs" ON faqs;
+DROP POLICY IF EXISTS "Admin Manage Orders" ON orders;
+DROP POLICY IF EXISTS "Admin Manage Enquiries" ON enquiries;
+DROP POLICY IF EXISTS "Admin Manage Config" ON site_config;
+DROP POLICY IF EXISTS "Admin Manage FAQs" ON faqs;
+
 -- Public Access
 CREATE POLICY "Public Insert Orders" ON orders FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Insert Enquiries" ON enquiries FOR INSERT WITH CHECK (true);
