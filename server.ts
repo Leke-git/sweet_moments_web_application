@@ -9,6 +9,9 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
+// Trust proxy for Vercel/Nginx
+app.set('trust proxy', 1);
+
 // Security Headers
 app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP for Vite dev mode compatibility

@@ -114,6 +114,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
       const { hash } = await response.json();
       
       if (supabase) {
+        sessionStorage.setItem('just_logged_in', 'true');
         window.location.hash = hash;
         window.location.reload();
       }

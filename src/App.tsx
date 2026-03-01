@@ -81,6 +81,15 @@ export default function App() {
                 role: isAdmin ? 'admin' : 'customer'
               });
               setShowAuthModal(false);
+              
+              // Check if we just logged in to show a welcome message
+              const justLoggedIn = sessionStorage.getItem('just_logged_in');
+              if (justLoggedIn) {
+                sessionStorage.removeItem('just_logged_in');
+                const welcomeMsg = isAdmin ? "Welcome back, Admin! Opening dashboard..." : "Welcome back! You are now logged in.";
+                alert(welcomeMsg);
+              }
+
               if (isAdmin) {
                 setShowAdminPanel(true);
               }

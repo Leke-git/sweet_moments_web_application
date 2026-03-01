@@ -76,13 +76,16 @@ export const Nav: React.FC<NavProps> = ({
             {user ? (
               <div className="flex items-center space-x-2">
                 {isAdmin && (
-                  <button
-                    onClick={onOpenAdmin}
-                    className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-accent"
-                    title="Admin Dashboard"
-                  >
-                    <LayoutDashboard size={20} />
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-accent bg-accent/10 px-2 py-1 rounded-md hidden lg:inline-block">Admin Mode</span>
+                    <button
+                      onClick={onOpenAdmin}
+                      className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-accent"
+                      title="Admin Dashboard"
+                    >
+                      <LayoutDashboard size={20} />
+                    </button>
+                  </div>
                 )}
                 <button
                   onClick={onSignOut}
